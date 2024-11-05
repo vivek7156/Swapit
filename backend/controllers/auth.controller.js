@@ -5,13 +5,19 @@ import bcrypt from "bcryptjs";
 
 export const signup = async (req, res) => {
     try {
-        const { name, email, password, collegeId } = req.body;
+        const { username, name, email, password, collegeId } = req.body;
 
         // Check if the user already exists
-        const existingUser = await User.findOne({ email });
-        if (existingUser) {
+        const existingUser = await User.findOne({ username });
+		if (existingUser) {
+			return res.status(400).json({ error: "Username is already taken" });
+		}
+
+        const existingEmail = await User.findOne({ email });
+        if (existingEmail) {
         return res.status(400).json({ message: 'User already exists' });
         }
+
         const college = await College.findById(collegeId);
         if (!college) {
           return res.status(404).json({ message: "College not found" });
@@ -35,6 +41,7 @@ export const signup = async (req, res) => {
             await user.save();
             res.status(201).json({
                 _id: user._id,
+                username: user.username,
                 name: user.name,
                 email: user.email,
                 college: user.college,

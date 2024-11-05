@@ -7,6 +7,11 @@ const UserSchema = new Schema(
         required: true,
         trim: true,
       },
+      username: {
+        type: String,
+        required: true,
+        unique: true,
+      },
       email: {
         type: String,
         required: true,
@@ -29,9 +34,15 @@ const UserSchema = new Schema(
       bio: {
         type: String,
         maxlength: 300,
+        default: "", // User bio
+      },
+      link: {
+        type: String,
+        default: "",
       },
       profileImage: {
-        type: String, // URL to profile image
+        type: String,
+        default: "", // URL to profile image
       },
       ratings: {
         type: Number,
