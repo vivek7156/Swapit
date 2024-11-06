@@ -28,7 +28,7 @@ const itemSchema = new mongoose.Schema({
     createdBy: { 
         type: mongoose.Schema.Types.ObjectId, 
         ref: 'User', 
-        equired: true 
+        required: true 
     },
     createdAt: { 
         type: Date, 
