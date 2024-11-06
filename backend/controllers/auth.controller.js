@@ -5,14 +5,16 @@ import bcrypt from "bcryptjs";
 
 export const signup = async (req, res) => {
     try {
-        const { username, name, email, password, collegeId } = req.body;
+        const { username, email, password, collegeId } = req.body;
 
         // Check if the user already exists
         const existingUser = await User.findOne({ username });
 		if (existingUser) {
 			return res.status(400).json({ error: "Username is already taken" });
 		}
-
+        if(!username || !email || !password || !collegeId) {
+            return res.status(400).json({ message: 'Please fill in all fields' });
+        }
         const existingEmail = await User.findOne({ email });
         if (existingEmail) {
         return res.status(400).json({ message: 'User already exists' });
@@ -31,7 +33,7 @@ export const signup = async (req, res) => {
 
         // Create a new user
         const user = new User({
-        name,
+        username,
         email,
         password: hashedPassword,
         college: college._id,

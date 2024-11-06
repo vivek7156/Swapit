@@ -4,7 +4,6 @@ const UserSchema = new Schema(
     {
       name: {
         type: String,
-        required: true,
         trim: true,
       },
       username: {
@@ -23,7 +22,7 @@ const UserSchema = new Schema(
         required: true,
       },
       college: {
-        type: Schema.Types.ObjectId,
+        type: mongoose.Schema.Types.ObjectId,
         ref: "College", // Reference to the college the user belongs to
         required: true,
       },
@@ -50,9 +49,15 @@ const UserSchema = new Schema(
       },
       listings: [
         {
-          type: Schema.Types.ObjectId,
-          ref: "Listing", // Reference to listings created by the user
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Item", // Reference to listings created by the user
         },
+      ],
+      watchlist: [
+        { 
+          type: mongoose.Schema.Types.ObjectId, 
+          ref: 'Item' 
+        },  // Adding watchlist field
       ],
     },
     {
