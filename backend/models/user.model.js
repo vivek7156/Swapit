@@ -59,6 +59,7 @@ const UserSchema = new Schema(
           ref: 'Item' 
         },  // Adding watchlist field
       ],
+      isAdmin: { type: Boolean, default: false },
     },
     {
       timestamps: true,

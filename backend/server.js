@@ -3,6 +3,7 @@ import authRoutes from './routes/auth.routes.js';
 import userRoutes from './routes/user.routes.js';
 import collegeRoutes from './routes/college.routes.js';
 import itemRoutes from './routes/item.routes.js';
+import adminRoutes from './routes/admin.routes.js';
 import notificationRoutes from './routes/notification.routes.js';
 import dotenv from 'dotenv';
 import connectMongoDB from './db/connectMongoDB.js';
@@ -25,6 +26,7 @@ const PORT = process.env.PORT || 5000;
 
 app.use("/api", collegeRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/admin", adminRoutes);
 app.use("/api/users", userRoutes);
 app.use('/api/items', itemRoutes);
 app.use('/api/notifications', notificationRoutes);
