@@ -41,6 +41,11 @@ export const signup = async (req, res) => {
         if(user) {
             generateTokenAndSetCookie(user._id, res);
             await user.save();
+            await College.findByIdAndUpdate(
+                collegeId,
+                { $addToSet: { students: user._id } }, // Add user ID to the college's students array if not already present
+                { new: true } // Return the updated document
+              );
             res.status(201).json({
                 _id: user._id,
                 username: user.username,
@@ -62,13 +67,13 @@ export const login = async (req, res) => {
         // Check if the user exists
         const user = await User.findOne({ email });
         if (!user) {
-            return res.status(400).json({ message: 'Invalid credentials' });
+            return res.status(400).json({ message: 'Invalid email' });
         }
 
         // Check if the password is correct
         const isPasswordCorrect = await bcrypt.compare(password, user.password);
         if (!isPasswordCorrect) {
-            return res.status(400).json({ message: 'Invalid credentials' });
+            return res.status(400).json({ message: 'Invalid pass' });
         }
 
         // Generate token and set cookie
@@ -97,7 +102,7 @@ export const logout = async (req, res) => {
 };
 export const getProfile = async (req, res) => {
     try {
-        const user = await User.findById(req.user._id).populate('college');
+        const user = await User.findById(req.user._id).select('-password');
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }

@@ -12,6 +12,7 @@ import dotenv from 'dotenv';
 import connectMongoDB from './db/connectMongoDB.js';
 import cookieParser from 'cookie-parser';
 import { v2 as cloudinary } from 'cloudinary';
+import cors from 'cors';
 import http from 'http';
 import { Server } from 'socket.io';
 
@@ -31,6 +32,7 @@ const io = new Server(server);
 //         methods: ["GET", "POST"]
 //     }
 // });
+app.use(cors({ origin: 'http://localhost:3000', credentials: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());

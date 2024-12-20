@@ -16,6 +16,16 @@ export const getUserProfile = async (req, res) => {
     }
 };
 
+export const getAllUsers = async (req, res) => {
+    try {
+        const users = await User.find();
+        res.status(200).json(users);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+
 export const updateUserProfile = async (req, res) => {
     const { username, name, email, currentpassword, newpassword, college, bio, link } = req.body;
     let { profileImage } = req.body;
