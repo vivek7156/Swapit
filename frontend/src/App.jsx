@@ -8,7 +8,6 @@ import SearchPage from "./pages/dashboard/SearchPage";
 import MessagingPage from "./pages/dashboard/Message";
 import UserListingsPage from "./pages/dashboard/YourListings";
 import UserProfile from "./pages/dashboard/UserProfile";
-import SettingsPage from "./pages/dashboard/Settings";
 import NotificationsPage from "./pages/dashboard/NotificationPage";
 import { Toaster } from "react-hot-toast";
 import Navbar from "./components/Navbar";
@@ -86,8 +85,7 @@ function App() {
         <Route path='/search' element={authUser ? <SearchPage /> : <Navigate to="/login" />} />
         <Route path='/messages' element={authUser ? <MessagingPage /> : <Navigate to="/login" />} />
         <Route path='/listings' element={authUser ? <UserListingsPage /> : <Navigate to="/login" />} />
-        <Route path='/profile' element={<UserProfile />} />
-        <Route path='/settings' element={authUser ? <SettingsPage /> : <Navigate to="/login" />} />
+        <Route path='/profile/:username' element={authUser ? <UserProfile /> : <Navigate to="/login" />} />
         <Route path='/notifications' element={authUser ? <NotificationsPage /> : <Navigate to="/login" />} />
       </Routes>
       <Toaster />

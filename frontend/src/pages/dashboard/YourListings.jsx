@@ -10,7 +10,8 @@ import {
   Trash2,
   X,
   Upload,
-  Plus
+  Plus,
+  Package
 } from 'lucide-react';
 import Navbar from '../../components/Navbar';
 import Sidebar from '../../components/Sidebar';
@@ -219,8 +220,6 @@ const UserListingsPage = () => {
 
 
 
-  if (!listings) return <p className="text-gray-300">No listings found.</p>;
-
   // const [listings] = useState([
   //   {
   //     id: 1,
@@ -337,6 +336,12 @@ const UserListingsPage = () => {
               <span>New Listing</span>
             </button>
           </div>
+          {(!listings || listings.length === 0) ? (
+              <div className="flex flex-col items-center justify-center py-12 text-gray-400">
+                <Package className="w-12 h-12 mb-4" />
+                <p>No Listings</p>
+              </div>
+          ) : (
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {listings.map((listing) => (
@@ -377,7 +382,7 @@ const UserListingsPage = () => {
                 </div>
               </div>
             ))}
-          </div>
+          </div>)}
         </div>
       </div>
 
@@ -713,33 +718,38 @@ const ImageSlider = ({ images }) => {
     );
   };
 
-  if (!images || images.length === 0) return null;
-
   return (
-    <div className="relative">
-      <img
-        src={images[currentIndex]}
-        alt={`Slide ${currentIndex + 1}`}
-        className="w-full xl:h-80 h-60 object-cover"
-      />
-      {images.length > 1 && (
-        <>
-          <button
-            className="absolute top-1/2 left-4 transform -translate-y-1/2 bg-black bg-opacity-50 text-white rounded-full p-2"
-            onClick={handlePrev}
-          >
-            &#8249;
-          </button>
-          <button
-            className="absolute top-1/2 right-4 transform -translate-y-1/2 bg-black bg-opacity-50 text-white rounded-full p-2"
-            onClick={handleNext}
-          >
-            &#8250;
-          </button>
-        </>
-      )}
-    </div>
+  <div className="relative">
+    {images.length > 0 ? (
+      <>
+        <img
+          src={images[currentIndex]}
+          alt={`Slide ${currentIndex + 1}`}
+          className="w-full h-60 xl:h-80 object-cover rounded-t-lg"
+        />
+        {images.length > 1 && (
+          <>
+            <button
+              className="absolute top-1/2 left-4 transform -translate-y-1/2 bg-black bg-opacity-50 text-white rounded-full p-2"
+              onClick={handlePrev}
+            >
+              &#8249;
+            </button>
+            <button
+              className="absolute top-1/2 right-4 transform -translate-y-1/2 bg-black bg-opacity-50 text-white rounded-full p-2"
+              onClick={handleNext}
+            >
+              &#8250;
+            </button>
+          </>
+        )}
+      </>
+    ) : (
+      <div className="w-full h-60 xl:h-80 bg-zinc-800 rounded-t-lg flex items-center justify-center">
+        <Package className="w-10 h-10 text-zinc-600" />
+      </div>
+    )}
+  </div>
   );
 };
-
 export default UserListingsPage;

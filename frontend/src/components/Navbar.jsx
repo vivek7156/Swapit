@@ -93,8 +93,7 @@ const Navbar = ({ toggleSidebar, selectedButton, setSelectedButton }) => {
                 selectedButton === 'User' ? 'ring-green-500' : 'ring-white'
               }`}
             >
-              <div>
-              {authUser.profileImage ? <img src={authUser?.profileImage} /> : <User className="w-6 h-6" />}</div>
+                <User className="w-6 h-6 text-white" />
             </button>
 
             {/* User Dropdown */}

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Sidebar from '../../components/Sidebar';
-import { Search } from 'lucide-react';
+import { Search, Package } from 'lucide-react';
 import Navbar from '../../components/Navbar';
 import { useQuery } from '@tanstack/react-query';
 import LoadingSpinner from '../../components/LoadingSpinner';
@@ -342,32 +342,38 @@ const ImageSlider = ({ images }) => {
     );
   };
 
-  if (!images || images.length === 0) return null;
-
   return (
     <div className="relative">
-      <img
-        src={images[currentIndex]}
-        alt={`Slide ${currentIndex + 1}`}
-        className="w-full h-80 object-cover"
-      />
-      {images.length > 1 && (
-        <>
-          <button
-            className="absolute top-1/2 left-4 transform -translate-y-1/2 bg-black bg-opacity-50 text-white rounded-full p-2"
-            onClick={handlePrev}
-          >
-            &#8249;
-          </button>
-          <button
-            className="absolute top-1/2 right-4 transform -translate-y-1/2 bg-black bg-opacity-50 text-white rounded-full p-2"
-            onClick={handleNext}
-          >
-            &#8250;
-          </button>
-        </>
-      )}
-    </div>
+    {images.length > 0 ? (
+      <>
+        <img
+          src={images[currentIndex]}
+          alt={`Slide ${currentIndex + 1}`}
+          className="w-full lg:h-80 h-60 object-cover rounded-t-lg"
+        />
+        {images.length > 1 && (
+          <>
+            <button
+              className="absolute top-1/2 left-4 transform -translate-y-1/2 bg-black bg-opacity-50 text-white rounded-full p-2"
+              onClick={handlePrev}
+            >
+              &#8249;
+            </button>
+            <button
+              className="absolute top-1/2 right-4 transform -translate-y-1/2 bg-black bg-opacity-50 text-white rounded-full p-2"
+              onClick={handleNext}
+            >
+              &#8250;
+            </button>
+          </>
+        )}
+      </>
+    ) : (
+      <div className="w-full h-48 bg-zinc-800 rounded-t-lg flex items-center justify-center">
+        <Package className="w-10 h-10 text-zinc-600" />
+      </div>
+    )}
+  </div>
   );
 };
 

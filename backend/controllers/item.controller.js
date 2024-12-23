@@ -149,19 +149,28 @@ export const updateItem = async (req, res) => {
     }
   };
 
-// Delete an item listing
 export const deleteItem = async (req, res) => {
     try {
         const { itemId } = req.params;
-        const item = await Item.findByIdAndDelete(itemId);
+        const userId = req.user._id;
+
+        // Find and delete the item
+        const item = await Item.findOneAndDelete({ _id: itemId, createdBy: userId });
         if (!item) return res.status(404).json({ message: 'Item not found' });
+
+        // Find the user and remove the item ID from their listings
+        const user = await User.findById(userId);
+        if (user) {
+            user.listings = user.listings.filter(listingId => listingId.toString() !== itemId);
+            await user.save();
+        }
+
         res.status(200).json({ message: 'Item deleted' });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Error deleting item' });
     }
 };
-
 export const searchItems = async (req, res) => {
     try {
         const { query, minPrice, maxPrice, category, collegeId, location } = req.query;
