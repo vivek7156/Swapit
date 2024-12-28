@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Menu, Bell, User } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
 
@@ -8,6 +8,8 @@ const Navbar = ({ toggleSidebar, selectedButton, setSelectedButton }) => {
   const [isDropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
   const queryClient = useQueryClient();
+  const location = useLocation();
+  const isNotificationPage = location.pathname === '/notifications';
 
   const { mutate: logout } = useMutation({
     mutationFn: async () => {
@@ -80,21 +82,25 @@ const Navbar = ({ toggleSidebar, selectedButton, setSelectedButton }) => {
               to="/notifications"
               onClick={() => handleButtonClick('Notifications')}
               className={`${
-                selectedButton === 'Notifications' ? 'text-green-500' : 'text-white'
+                isNotificationPage ? 'text-green-500' : 'text-white'
               }`}
             >
               <Bell className="w-6 h-6" />
             </Link>
 
             {/* User Icon with Dropdown */}
-            <button
-              onClick={handleDropdownToggle}
-              className={`${
-                selectedButton === 'User' ? 'ring-green-500' : 'ring-white'
-              }`}
-            >
-                <User className="w-6 h-6 text-white" />
-            </button>
+<button
+  onClick={handleDropdownToggle}
+  className={`w-8 h-8 rounded-full overflow-hidden hover:ring-2 transition-all ${
+    selectedButton === 'User' ? 'ring-2 ring-green-500' : 'ring-white'
+  }`}
+>
+  <img
+    src={authUser?.profileImage || "/default-avatar.png"}
+    alt={authUser?.username || "Profile"}
+    className="w-full h-full object-cover"
+  />
+</button>
 
             {/* User Dropdown */}
             {isDropdownOpen && (

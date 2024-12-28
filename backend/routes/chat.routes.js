@@ -1,23 +1,18 @@
 import express from 'express';
-import Message from '../models/message.model.js';
+import { protectRoute } from '../middleware/protectRoute.js';
+import { getConversation, getMessages, getReceivedMessages, getSentMessages, rateSeller, requestChat, sendMessage, updateConversationStatus } from '../controllers/chat.controller.js';
+
 
 const router = express.Router();
 
 // Route to fetch chat messages for a specific item
-router.get('/:itemId', async (req, res) => {
-    try {
-        const { itemId } = req.params;
-        const messages = await Message.find({ itemId }).sort({ timestamp: 1 }); // Sort messages by timestamp (oldest first)
-        
-        if (!messages) {
-            return res.status(404).json({ message: 'No messages found for this item.' });
-        }
-        
-        res.status(200).json({ messages });
-    } catch (error) {
-        console.error('Error fetching messages:', error);
-        res.status(500).json({ message: 'Server error' });
-    }
-});
+router.get('/all/:id', protectRoute, getMessages);
+router.post('/send', protectRoute, sendMessage);
+router.post('/request', protectRoute, requestChat); 
+router.get('/received', protectRoute, getReceivedMessages); 
+router.get('/sent', protectRoute, getSentMessages);
+router.get('/conversations/:id', protectRoute, getConversation);
+router.post('/status', protectRoute, updateConversationStatus);
+router.post('/rate', protectRoute, rateSeller);
 
 export default router;

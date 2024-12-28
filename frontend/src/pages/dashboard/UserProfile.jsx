@@ -230,7 +230,7 @@ const ListingCard = ({ listing }) => (
       </p>
       <div className="flex items-center justify-between">
         <span className="text-green-400 font-semibold">
-          ${listing.price}
+          Rs.{listing.price}
         </span>
         <Badge variant="secondary">{listing.category}</Badge>
       </div>

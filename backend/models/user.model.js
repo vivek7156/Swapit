@@ -47,6 +47,21 @@ const UserSchema = new Schema(
         type: Number,
         default: 0,
       },
+      sellerRatings: [{
+        fromUser: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'User'
+        },
+        rating: {
+          type: Number,
+          min: 1,
+          max: 5
+        },
+        itemId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'Item'
+        }
+      }],
       listings: [
         {
           type: mongoose.Schema.Types.ObjectId,

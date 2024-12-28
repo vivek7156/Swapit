@@ -1,200 +1,208 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Bell, Check, Trash2, Mail, Heart, UserPlus, MessageSquare, Package } from 'lucide-react';
-import { Button } from "@/components/ui/button";
+import { Button } from "../../components/ui/button";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import {
-  Alert,
-  AlertDescription,
-  AlertTitle,
-} from "@/components/ui/alert";
-import Sidebar from '@/components/Sidebar';
-import Navbar from '@/components/Navbar';
+} from "../../components/ui/card";
+import { Badge } from "../../components/ui/badge";
+import axios from 'axios';
 
 const NotificationsPage = () => {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [selectedButton, setSelectedButton] = useState("Notifications");
+  const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const toggleSidebar = () => {
     setSidebarOpen(!isSidebarOpen);
   };
-  const [notifications, setNotifications] = useState([
-    {
-      id: 1,
-      type: 'message',
-      title: 'New Message',
-      description: 'John Doe sent you a message about your listing',
-      time: '2 minutes ago',
-      read: false,
-      icon: MessageSquare
-    },
-    {
-      id: 2,
-      type: 'like',
-      title: 'New Like',
-      description: 'Sarah liked your MacBook Pro listing',
-      time: '1 hour ago',
-      read: false,
-      icon: Heart
-    },
-    {
-      id: 3,
-      type: 'follow',
-      title: 'New Follower',
-      description: 'Mike started following you',
-      time: '2 hours ago',
-      read: true,
-      icon: UserPlus
-    },
-    {
-      id: 4,
-      type: 'order',
-      title: 'Order Update',
-      description: 'Your order #1234 has been shipped',
-      time: '1 day ago',
-      read: false,
-      icon: Package
-    },
-    {
-      id: 5,
-      type: 'system',
-      title: 'System Update',
-      description: 'We\'ve updated our privacy policy',
-      time: '2 days ago',
-      read: true,
-      icon: Bell
+
+  useEffect(() => {
+    fetchNotifications();
+  }, []);
+  // const [notifications, setNotifications] = useState([
+  //   {
+  //     id: 1,
+  //     type: 'message',
+  //     title: 'New Message',
+  //     description: 'John Doe sent you a message about your listing',
+  //     time: '2 minutes ago',
+  //     read: false,
+  //     icon: MessageSquare
+  //   },
+  //   {
+  //     id: 2,
+  //     type: 'like',
+  //     title: 'New Like',
+  //     description: 'Sarah liked your MacBook Pro listing',
+  //     time: '1 hour ago',
+  //     read: false,
+  //     icon: Heart
+  //   },
+  //   {
+  //     id: 3,
+  //     type: 'follow',
+  //     title: 'New Follower',
+  //     description: 'Mike started following you',
+  //     time: '2 hours ago',
+  //     read: true,
+  //     icon: UserPlus
+  //   },
+  //   {
+  //     id: 4,
+  //     type: 'order',
+  //     title: 'Order Update',
+  //     description: 'Your order #1234 has been shipped',
+  //     time: '1 day ago',
+  //     read: false,
+  //     icon: Package
+  //   },
+  //   {
+  //     id: 5,
+  //     type: 'system',
+  //     title: 'System Update',
+  //     description: 'We\'ve updated our privacy policy',
+  //     time: '2 days ago',
+  //     read: true,
+  //     icon: Bell
+  //   }
+  // ]);
+  const fetchNotifications = async () => {
+    try {
+      const response = await axios.get('/api/notifications');
+      console.log('Notifications:', response.data);
+      setNotifications(response.data);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+      setLoading(false);
     }
-  ]);
-
-  const getUnreadCount = () => notifications.filter(n => !n.read).length;
-
-  const handleMarkAsRead = (id) => {
-    setNotifications(notifications.map(notification => 
-      notification.id === id ? { ...notification, read: true } : notification
-    ));
   };
 
-  const handleDelete = (id) => {
-    setNotifications(notifications.filter(notification => notification.id !== id));
+  const getUnreadCount = () => notifications.filter(n => !n.isRead).length;
+
+  const handleMarkAsRead = async (id) => {
+    try {
+      await axios.patch(`/api/notifications/${id}/read`);
+      // Update local state
+      setNotifications(notifications.map(notification => 
+        notification._id === id ? { ...notification, isRead: true } : notification
+      ));
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+    }
   };
 
-  const handleMarkAllAsRead = () => {
-    setNotifications(notifications.map(notification => ({ ...notification, read: true })));
+  const handleDelete = async (id) => {
+    try {
+      await axios.delete(`/api/notifications/${id}`);
+      // Update local state
+      setNotifications(notifications.filter(notification => notification._id !== id));
+    } catch (error) {
+      console.error('Error deleting notification:', error);
+    }
   };
 
-  const handleDeleteAll = () => {
-    setNotifications([]);
+  const handleMarkAllAsRead = async () => {
+    try {
+      // Mark all as read in the backend
+      const promises = notifications
+        .filter(n => !n.isRead)
+        .map(n => axios.patch(`/api/notifications/${n._id}/read`));
+      
+      await Promise.all(promises);
+      
+      // Update local state
+      setNotifications(notifications.map(notification => ({ 
+        ...notification, 
+        isRead: true 
+      })));
+    } catch (error) {
+      console.error('Error marking all notifications as read:', error);
+    }
+  };
+
+  const handleDeleteAll = async () => {
+    try {
+      await axios.delete('/api/notifications');
+      // Clear local state
+      setNotifications([]);
+    } catch (error) {
+      console.error('Error deleting all notifications:', error);
+    }
   };
 
   return (
-    <div className='bg-zinc-900'>
-            <Navbar toggleSidebar={toggleSidebar} 
-        selectedButton={selectedButton}
-        setSelectedButton={setSelectedButton}/>
-
-            <Sidebar
-        isSidebarOpen={isSidebarOpen}
-        setSidebarOpen={setSidebarOpen}
-      />
-    <div className="max-w-7xl mx-auto p-6 bg-zinc-800 rounded-xl min-h-screen lg:ml-72">
-      
-      <div className="space-y-6 mt-16">
-        {/* Header */}
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="md:text-3xl sm:text-2xl font-bold flex items-center gap-2">
-              <Bell className="w-8 h-8" />
-              Notifications
-              {getUnreadCount() > 0 && (
-                <Badge variant="destructive" className="ml-2 max-sm:hidden">
-                  {getUnreadCount()} new
-                </Badge>
-              )}
-            </h1>
-            <p className="text-gray-400 mt-2 max-sm:hidden">Stay updated with your latest activities</p>
-          </div>
-          
-          <div className="flex gap-2">
-            {getUnreadCount() > 0 && (
-              <Button variant="outline" onClick={handleMarkAllAsRead} className="text-gray-100 border-gray-600 bg-gray-800">
-                <Check className="w-4 h-4 mr-2 max-sm:mr-0" />
-                <div className='max-sm:hidden'>Mark all as read</div>
+    <div className="flex h-screen lg:pl-64 pt-16">
+      <div className="flex-1 bg-zinc-900 p-8">
+        <div className="max-w-4xl mx-auto space-y-6">
+          <div className="flex justify-between items-center">
+            <h1 className="text-2xl font-semibold text-white">Notifications</h1>
+            <div className="flex space-x-2">
+              <Button onClick={handleMarkAllAsRead} className="mr-2 hover:bg-zinc-700">
+                Mark all as read
               </Button>
-            )}
-            {notifications.length > 0 && (
-              <Button variant="destructive" onClick={handleDeleteAll}>
-                <Trash2 className="w-4 h-4 mr-2 max-sm:mr-0" />
-                <div className='max-sm:hidden'>Delete all</div>
+              <Button onClick={handleDeleteAll} className="hover:bg-red-700">
+                Delete all
               </Button>
-            )}
+            </div>
           </div>
-        </div>
 
-        {/* Notifications List */}
-        {notifications.length === 0 ? (
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center py-8">
-              <Bell className="w-12 h-12 text-gray-400 mb-4" />
-              <h3 className="text-xl font-semibold text-gray-300">No notifications</h3>
-              <p className="text-gray-400">You're all caught up!</p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="space-y-4">
-            {notifications.map((notification) => {
-              const IconComponent = notification.icon;
-              return (
+          {notifications.length === 0 ? (
+            <Card>
+              <CardContent className="text-center py-8">
+                <Bell className="w-12 h-12 mx-auto text-gray-400 mb-4" />
+                <p className="text-gray-400">No notifications yet</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              {notifications.map((notification) => (
                 <Card 
-                  key={notification.id}
-                  className={`transition-colors ${notification.read ? 'bg-gray-400' : 'bg-gray-200'}`}
+                  key={notification._id}
+                  className={`transition-colors top-2 ${notification.isRead ? 'opacity-60' : ''}`}
                 >
-                  <CardContent className="flex items-start justify-between p-4">
-                    <div className="flex gap-4">
-                      <div className="mt-1">
-                        <IconComponent className="w-5 h-5 text-gray-600" />
+                  <CardContent className="flex items-start justify-between">
+                    <div className="flex items-end space-x-4 space-y-2">
+                      <div className="p-2 bg-zinc-800 rounded-lg">
+                        <Bell className="w-5 h-5 text-gray-400" />
                       </div>
                       <div>
-                        <div className="font-semibold flex items-center gap-2">
-                          {notification.title}
-                          {!notification.read && (
-                            <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                          )}
-                        </div>
-                        <p className="text-gray-600 text-sm mt-1">{notification.description}</p>
-                        <p className="text-gray-400 text-xs mt-1">{notification.time}</p>
+                        <p className="text-gray-200">{notification.content}</p>
+                        <p className="text-sm text-gray-400">
+                          {new Date(notification.createdAt).toLocaleDateString()}
+                        </p>
                       </div>
                     </div>
-                    <div className="flex gap-2">
-                      {!notification.read && (
+                    <div className="flex gap-2 items-end space-y-4">
+                      {!notification.isRead && (
                         <Button 
                           variant="ghost" 
                           size="sm"
-                          onClick={() => handleMarkAsRead(notification.id)}
+                          onClick={() => handleMarkAsRead(notification._id)}
                         >
-                          <Check className="w-4 h-4" />
+                          <Check className="w-4 h-4 text-white" />
                         </Button>
                       )}
                       <Button 
                         variant="ghost" 
                         size="sm"
-                        onClick={() => handleDelete(notification.id)}
+                        onClick={() => handleDelete(notification._id)}
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="w-4 h-4 text-white" />
                       </Button>
                     </div>
                   </CardContent>
                 </Card>
-              );
-            })}
-          </div>
-        )}
+              ))}
+            </div>
+          )}
+        </div>
       </div>
-    </div></div>
+    </div>
   );
 };
 

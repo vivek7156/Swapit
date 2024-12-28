@@ -1,34 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Package, Heart } from 'lucide-react';
+import { Heart, Package } from 'lucide-react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 
-const DashboardPage = () => {
+const WatchlistPage = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  
   const { data: authUser } = useQuery({ queryKey: ['authUser'] });
-  const { data: listings, isLoading, isError } = useQuery({
-    queryKey: ['listings'],
-    queryFn: async () => {
-      try {
-        const res = await fetch('/api/items/getItems');
-        const data = await res.json();
-        if (!res.ok) {
-          throw new Error(data.error || "Something went wrong");
-        }
-        return data;
-      } catch (error) {
-        throw new Error(error);
-      }
-    },
-  });
-  const limitedListings = listings?.slice(0, 30); // Limit to 30 items
-
   const [watchlistedItems, setWatchlistedItems] = useState([]);
-  
+
+  const { data: listings, isLoading, isError } = useQuery({
+    queryKey: ['watchlist'],
+    queryFn: async () => {
+      const response = await axios.get(`/api/users/${authUser._id}/watchlist`);
+      return response.data;
+    }
+  });
+
   useEffect(() => {
     if(!authUser?._id) return;
 
@@ -43,18 +33,60 @@ const DashboardPage = () => {
     fetchWatchlist();
   }, [authUser._id]);
 
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
+  const handleRemoveFromWatchlist = async (itemId) => {
+    try {
+      await axios.delete(`/api/users/${authUser._id}/watchlist`, {
+        data: { itemId }
+      });
+      queryClient.invalidateQueries(['watchlist']);
+      toast.success('Removed from watchlist');
+    } catch (error) {
+      console.error('Error removing from watchlist:', error);
+      toast.error('Failed to remove from watchlist');
+    }
+  };
 
-  if (isError) {
-    return <div>Error fetching listings.</div>;
-  }
+  const handleWatchlistToggle = async (listing) => {
+    try {
+      const isWatchlisted = watchlistedItems.includes(listing._id);
 
+      if (isWatchlisted) {
+        await axios.delete(`/api/users/${authUser._id}/watchlist`, {
+          data: { itemId: listing._id }
+        });
+        setWatchlistedItems(prev => prev.filter(id => id !== listing._id));
+        toast.success('Removed from watchlist');
+      } else {
+        await axios.post(`/api/users/${authUser._id}/watchlist`, {
+          itemId: listing._id
+        });
+        setWatchlistedItems(prev => [...prev, listing._id]);
+        toast.success('Added to watchlist');
+      }
+
+      queryClient.invalidateQueries(['watchlist']);
+    } catch (error) {
+      console.error('Error updating watchlist:', error);
+      toast.error('Failed to update watchlist');
+    }
+  };
+
+
+  if (isLoading) return <div>Loading...</div>;
+  if (isError) return <div>Error loading watchlist</div>;
   if (!listings || listings.length === 0) {
-    return <div>No listings available.</div>;
+    return (
+      <div className="flex h-screen lg:pl-64 pt-16">
+        <div className="flex-1 bg-zinc-900 p-8">
+          <div className="flex flex-col items-center justify-center h-full">
+            <Package className="w-16 h-16 text-gray-400 mb-4" />
+            <h2 className="text-xl font-semibold text-gray-300">No items in watchlist</h2>
+            <p className="text-gray-500">Items you add to watchlist will appear here</p>
+          </div>
+        </div>
+      </div>
+    );
   }
-  
 
   const handleRequest = async (listing) => {
     try {
@@ -89,42 +121,14 @@ const DashboardPage = () => {
     }
   };
 
-
-  const handleWatchlistToggle = async (listing) => {
-    try {
-      const isWatchlisted = watchlistedItems.includes(listing._id);
-
-      if (isWatchlisted) {
-        await axios.delete(`/api/users/${authUser._id}/watchlist`, {
-          data: { itemId: listing._id }
-        });
-        setWatchlistedItems(prev => prev.filter(id => id !== listing._id));
-        toast.success('Removed from watchlist');
-      } else {
-        await axios.post(`/api/users/${authUser._id}/watchlist`, {
-          itemId: listing._id
-        });
-        setWatchlistedItems(prev => [...prev, listing._id]);
-        toast.success('Added to watchlist');
-      }
-
-      queryClient.invalidateQueries(['watchlist']);
-    } catch (error) {
-      console.error('Error updating watchlist:', error);
-      toast.error('Failed to update watchlist');
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-zinc-900 ml-[8.5px]">
-
-      {/* Main Content */}
-      <main className="lg:pl-64 pt-16">
-        <div className="max-w-7xl mx-auto px-4 py-6">
+    <div className="flex h-screen lg:pl-64 pt-16">
+      <div className="flex-1 bg-zinc-900 p-8">
+        <div className="max-w-7xl mx-auto">
+          <h1 className="text-2xl font-semibold text-white mb-6">Your Watchlist</h1>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {limitedListings.map((listing) => (
-              <div key={listing.id} className="bg-zinc-800 rounded-lg shadow-sm overflow-hidden">
-                {/* Image Slider */}
+            {listings.map((listing) => (
+              <div key={listing._id} className="bg-zinc-800 rounded-lg shadow-sm overflow-hidden">
                 <div className="relative">
                   <ImageSlider images={listing.images} />
                 </div>
@@ -168,7 +172,7 @@ const DashboardPage = () => {
                       </div>
                     </div>
                     <div>
-                      {listing.createdBy._id !== authUser._id && (
+                      {listing?.createdBy?._id !== authUser?._id && (
                         <div className='flex space-x-2'>
                           {listing.status === 'swapped' ? (
                             <div className="mt-4 px-4 py-2 bg-gray-600 text-white rounded-lg text-center">
@@ -195,6 +199,14 @@ const DashboardPage = () => {
                           )}
                         </div>
                       )}
+                <div className="mt-4 flex justify-end items-center">
+                    <button
+                      onClick={() => handleRemoveFromWatchlist(listing._id)}
+                      className="px-2 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                    >
+                      Remove
+                    </button>
+                  </div>
                     </div>
                   </div>
                 </div>
@@ -202,11 +214,10 @@ const DashboardPage = () => {
             ))}
           </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 };
-
 const ImageSlider = ({ images }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -257,4 +268,4 @@ const ImageSlider = ({ images }) => {
   );
 };
 
-export default DashboardPage;
+export default WatchlistPage;

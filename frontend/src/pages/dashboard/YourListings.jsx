@@ -352,7 +352,7 @@ const UserListingsPage = () => {
                 <div className="p-4">
                   <div className="flex justify-between items-start mb-1">
                     <h3 className="text-lg font-semibold text-gray-100">{listing.title}</h3>
-                    <span className="text-lg font-bold text-green-600">${listing.price}</span>
+                    <span className="text-lg font-bold text-green-600">Rs.{listing.price}</span>
                   </div>
                   <p className="text-sm text-gray-400 mb-4">{listing.description}</p>
                   <div className="flex flex-wrap gap-2 mb-4">
@@ -424,7 +424,7 @@ const UserListingsPage = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">Price ($)</label>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">Price (Rupees)</label>
                   <input
                     type="number"
                     value={createForm.price || ""}
@@ -560,7 +560,7 @@ const UserListingsPage = () => {
                 </div>
                 {/* Price Field */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">Price ($)</label>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">Price (Rupees)</label>
                   <input
                     type="number"
                     value={editForm.price}

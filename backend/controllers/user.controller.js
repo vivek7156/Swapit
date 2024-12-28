@@ -139,7 +139,21 @@ export const removeFromWatchlist = async (req, res) => {
 
 export const getWatchlist = async (req, res) => {
     try {
-        const user = await User.findById(req.user._id).populate('watchlist');
+        const user = await User.findById(req.user._id)
+        .populate({
+            path: 'watchlist',
+            populate: [
+                {
+                    path: 'createdBy',
+                    select: 'username profileImage'
+                },
+                {
+                    path: 'collegeId',
+                    select: 'name location'
+                }
+            ]
+        });
+
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }

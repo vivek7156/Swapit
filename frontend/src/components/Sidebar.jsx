@@ -1,10 +1,11 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { ShoppingBag, Search, MessageSquare, List, User } from 'lucide-react';
+import { ShoppingBag, Search, MessageSquare, List, User, Heart } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 
-const Sidebar = ({ isSidebarOpen, setSidebarOpen, selectedButton, setSelectedButton }) => {
+const Sidebar = ({ isSidebarOpen, setSidebarOpen, selectedButton, setSelectedButton, toggleSidebar }) => {
   const location = useLocation();
+  const sidebarRef = useRef(null);
   const { data: authUser } = useQuery({ queryKey: ["authUser"] });
 
   // Whenever the route changes, set the button based on the current path
@@ -22,6 +23,9 @@ const Sidebar = ({ isSidebarOpen, setSidebarOpen, selectedButton, setSelectedBut
       case '/listings':
         setSelectedButton('Your Listings');
         break;
+      case '/watchlist':
+        setSelectedButton('Watchlist');
+        break;
       case authUser ? `/profile/${authUser.username}` : '':
         setSelectedButton('Your Profile');
         break;
@@ -32,10 +36,27 @@ const Sidebar = ({ isSidebarOpen, setSidebarOpen, selectedButton, setSelectedBut
 
   const handleButtonClick = (buttonText) => {
     setSelectedButton(buttonText);
+    if (window.innerWidth < 1024) {
+      setSidebarOpen(false);
+    }
   };
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (sidebarRef.current && 
+          !sidebarRef.current.contains(event.target) && 
+          isSidebarOpen && 
+          window.innerWidth < 1024) {
+        setSidebarOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isSidebarOpen, setSidebarOpen]);
 
   return (
     <div
+      ref={sidebarRef}
       className={`fixed left-0 top-0 z-10 h-full w-64 bg-zinc-800 shadow-md pt-16 transform ${
         isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
       } lg:translate-x-0 transition-transform duration-300 ease-in-out`}
@@ -47,6 +68,7 @@ const Sidebar = ({ isSidebarOpen, setSidebarOpen, selectedButton, setSelectedBut
             { icon: Search, text: 'Search', link: '/search' },
             { icon: MessageSquare, text: 'Messages', link: '/messages' },
             { icon: List, text: 'Your Listings', link: '/listings' },
+            { icon: Heart, text: 'Watchlist', link: '/watchlist' },
             {
               icon: User,
               text: 'Your Profile',

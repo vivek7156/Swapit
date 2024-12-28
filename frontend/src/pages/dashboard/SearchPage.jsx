@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import Sidebar from '../../components/Sidebar';
-import { Search, Package } from 'lucide-react';
+import { Search, Package, Heart } from 'lucide-react';
 import Navbar from '../../components/Navbar';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, QueryClient, useQueryClient } from '@tanstack/react-query';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import SearchableDropdown from '../../components/ui/SearchableDropdown';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-hot-toast';
 
 const SearchPage = () => {
   const [query, setQuery] = useState('');
@@ -14,17 +17,13 @@ const SearchPage = () => {
   const [collegeId, setCollegeId] = useState('');
   const [location, setLocation] = useState('');
   const [searchParams, setSearchParams] = useState({});
-  const [isSidebarOpen, setSidebarOpen] = useState(false);
-  const [selectedButton, setSelectedButton] = useState("Search");
   const [colleges, setColleges] = useState([]);
   const [selectedCollege, setSelectedCollege] = useState("");
+  const [watchlistedItems, setWatchlistedItems] = useState([]);
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
-  const toggleSidebar = () => {
-    setSidebarOpen(!isSidebarOpen);
-  };
-  const handleButtonClick = (buttonText) => {
-    setSelectedButton(buttonText);
-  };
+  const { data: authUser } = useQuery({ queryKey: ['authUser'] });
 
   const handleMinPriceChange = (e) => {
     const value = Number(e.target.value);
@@ -98,57 +97,80 @@ const SearchPage = () => {
     );
   }
 
-  // const listings = [
-  //   {
-  //     id: 1,
-  //     title: "Computer Science Textbook",
-  //     description: "Used textbook in great condition, perfect for CS101",
-  //     price: 45.00,
-  //     category: "Books",
-  //     college: "State University",
-  //     createdBy: "John Smith",
-  //     createdOn: "2024-03-15",
-  //     image: "/api/placeholder/300/200",
-  //     condition: "Like New"
-  //   },
-  //   {
-  //     id: 2,
-  //     title: "Graphing Calculator",
-  //     description: "TI-84 Plus, barely used, comes with case",
-  //     price: 75.00,
-  //     category: "Electronics",
-  //     college: "City College",
-  //     createdBy: "Emily Johnson",
-  //     createdOn: "2024-03-14",
-  //     image: "/api/placeholder/300/200",
-  //     condition: "Good"
-  //   },
-  //   {
-  //     id: 3,
-  //     title: "Dorm Room Mini Fridge",
-  //     description: "3.3 cubic feet, black color, 1 year old",
-  //     price: 89.99,
-  //     category: "Appliances",
-  //     college: "Tech Institute",
-  //     createdBy: "Mike Wilson",
-  //     createdOn: "2024-03-13",
-  //     image: "/api/placeholder/300/200",
-  //     condition: "Used"
-  //   }
-  // ];
+  const handleRequest = async (listing) => {
+    try {
+      const response = await axios.post(`/api/chat/request`, {
+        itemId: listing._id,
+        sellerId: listing.createdBy._id,
+        buyerId: authUser._id,
+        participants: [
+          {
+            _id: authUser._id,
+            role: 'buyer'
+          },
+          {
+            _id: listing.createdBy._id,
+            role: 'seller'
+          }
+        ],
+        initialMessage: `Hi, I'm interested in your ${listing.title}`
+      });
 
+      if (response.status === 201) {
+        navigate(`/messages`);
+      } else {
+        console.error('Error creating chat:', response);
+      }
+    } catch (error) {
+      if (error.response?.status === 409) {
+        navigate(`/messages`);
+      } else {
+        console.error('Error requesting item:', error);
+      }
+    }
+  };
+
+
+  useEffect(() => {
+    const fetchWatchlist = async () => {
+      try {
+        const response = await axios.get(`/api/users/${authUser._id}/watchlist`);
+        setWatchlistedItems(response.data.map(item => item._id));
+      } catch (error) {
+        console.error('Error fetching watchlist:', error);
+      }
+    };
+    fetchWatchlist();
+  }, [authUser._id]);
+
+  const handleWatchlistToggle = async (listing) => {
+    try {
+      const isWatchlisted = watchlistedItems.includes(listing._id);
+
+      if (isWatchlisted) {
+        await axios.delete(`/api/users/${authUser._id}/watchlist`, {
+          data: { itemId: listing._id }
+        });
+        setWatchlistedItems(prev => prev.filter(id => id !== listing._id));
+        toast.success('Removed from watchlist');
+      } else {
+        await axios.post(`/api/users/${authUser._id}/watchlist`, {
+          itemId: listing._id
+        });
+        setWatchlistedItems(prev => [...prev, listing._id]);
+        toast.success('Added to watchlist');
+      }
+
+      queryClient.invalidateQueries(['watchlist']);
+    } catch (error) {
+      console.error('Error updating watchlist:', error);
+      toast.error('Failed to update watchlist');
+    }
+  };
 
   const categories = ["Books", "Electronics", "Furniture", "Appliances", "Clothing", "Sports"];
   return (
     <div className="min-h-screen bg-zinc-900 ">
-      <Navbar toggleSidebar={toggleSidebar} />
-      {/* Sidebar Component */}
-      <Sidebar
-        isSidebarOpen={isSidebarOpen}
-        setSidebarOpen={setSidebarOpen}
-        selectedButton={selectedButton}
-        setSelectedButton={setSelectedButton}
-      />
 
       <div className='pt-20 lg:pl-64'>
         {/* Search Header */}
@@ -205,9 +227,9 @@ const SearchPage = () => {
                 <div className="flex justify-between items-center w-full">
                   {/* Display Selected Price Range */}
                   <div className="flex justify-center flex-grow text-white">
-                    <span>Min: ${minPrice}</span>
+                    <span>Min: Rs.{minPrice}</span>
                     <span className="mx-4">-</span>
-                    <span>Max: ${maxPrice}</span>
+                    <span>Max: Rs{maxPrice}</span>
                   </div>
 
                   {/* Reset Button */}
@@ -266,7 +288,7 @@ const SearchPage = () => {
         </form>
       </div>
 
-      <div className="max-w-9xl mx-3 xl:pr-20 xl:pl-80 lg:pl-72 px-4">
+      <div className="max-w-7xl mx-3 xl:pr-12 xl:pl-96 lg:pl-72 px-4">
         {listings && listings.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:gap-10 gap-6">
             {listings.map((listing) => (
@@ -277,40 +299,71 @@ const SearchPage = () => {
                 <div className="p-4">
                   <div className="flex justify-between items-start">
                     <h3 className="text-lg font-semibold text-gray-100">{listing.title}</h3>
-                    <span className="text-lg font-bold text-primary">${listing.price}</span>
+                    <span className="text-lg font-bold text-primary">Rs.{listing.price}</span>
                   </div>
                   <p className="mt-2 text-sm text-gray-300">{listing.description}</p>
-                  <div className="mt-4 space-y-2">
-                    <div className="flex flex-wrap gap-2">
-                      <span className="px-2 py-1 bg-green-400 text-sm rounded-full text-gray-600">
-                        {listing.category}
-                      </span>
+                  <div className="mt-4 flex justify-between items-center">
+                    <div className='space-y-2'>
+                      <div className="flex flex-wrap gap-2">
+                        <span className="px-2 py-1 bg-green-400 text-sm rounded-full text-gray-600">
+                          {listing.category}
+                        </span>
+                      </div>
+                      <div className="flex items-center text-sm text-gray-400">
+                        <span className="font-medium">College:</span>
+                        <span className="ml-2">{listing.collegeId?.name || 'Unknown'}</span>
+                      </div>
+                      <div className="flex items-center text-sm text-white">
+                        {listing.createdBy?.profileImage && (
+                          <img
+                            src={listing.createdBy.profileImage || '/4737448_account_user_avatar_profile_icon.svg'}
+                            alt={listing.createdBy.username || 'User Avatar'}
+                            className="w-8 h-8 rounded-full mr-2"
+                          />
+                        )}
+                        <a
+                          href={`/profile/${listing.createdBy._id}`}
+                          className="text-primary font-medium hover:underline"
+                        >
+                          {listing.createdBy?.username || 'Unknown'}
+                        </a>
+                      </div>
+                      <div className="text-sm text-white">
+                        {new Date(listing.createdAt).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                        })}
+                      </div>
                     </div>
-                    <div className="flex items-center text-sm text-gray-400">
-                      <span className="font-medium">College:</span>
-                      <span className="ml-2">{listing.collegeId?.name || 'Unknown'}</span>
-                    </div>
-                    <div className="flex items-center text-sm text-white">
-                      {listing.createdBy?.profileImage && (
-                        <img
-                          src={listing.createdBy.profileImage || '/4737448_account_user_avatar_profile_icon.svg'}
-                          alt={listing.createdBy.username || 'User Avatar'}
-                          className="w-8 h-8 rounded-full mr-2"
-                        />
+                    <div>
+                      {listing.createdBy._id !== authUser._id && (
+                        <div className='flex space-x-2'>
+                          {listing.status === 'swapped' ? (
+                            <div className="mt-4 px-4 py-2 bg-gray-600 text-white rounded-lg text-center">
+                              Swapped
+                            </div>
+                          ) : (
+                            <>
+                              <button
+                                onClick={() => handleWatchlistToggle(listing)}
+                                className="mt-4 px-4 py-2 text-red-400 rounded-lg hover:bg-zinc-600 flex items-center gap-2"
+                              >
+                                <Heart
+                                  className={`w-4 h-4 ${watchlistedItems.includes(listing._id) ? 'fill-current' : ''
+                                    }`}
+                                />
+                              </button>
+                              <button
+                                onClick={() => handleRequest(listing)}
+                                className="mt-4 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
+                              >
+                                Request
+                              </button>
+                            </>
+                          )}
+                        </div>
                       )}
-                      <a
-                        href={`/profile/${listing.createdBy._id}`}
-                        className="text-primary font-medium hover:underline"
-                      >
-                        {listing.createdBy?.username || 'Unknown'}
-                      </a>
-                    </div>
-                    <div className="text-sm text-white">
-                      {new Date(listing.createdAt).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                      })}
                     </div>
                   </div>
                 </div>
@@ -344,36 +397,36 @@ const ImageSlider = ({ images }) => {
 
   return (
     <div className="relative">
-    {images.length > 0 ? (
-      <>
-        <img
-          src={images[currentIndex]}
-          alt={`Slide ${currentIndex + 1}`}
-          className="w-full lg:h-80 h-60 object-cover rounded-t-lg"
-        />
-        {images.length > 1 && (
-          <>
-            <button
-              className="absolute top-1/2 left-4 transform -translate-y-1/2 bg-black bg-opacity-50 text-white rounded-full p-2"
-              onClick={handlePrev}
-            >
-              &#8249;
-            </button>
-            <button
-              className="absolute top-1/2 right-4 transform -translate-y-1/2 bg-black bg-opacity-50 text-white rounded-full p-2"
-              onClick={handleNext}
-            >
-              &#8250;
-            </button>
-          </>
-        )}
-      </>
-    ) : (
-      <div className="w-full h-48 bg-zinc-800 rounded-t-lg flex items-center justify-center">
-        <Package className="w-10 h-10 text-zinc-600" />
-      </div>
-    )}
-  </div>
+      {images.length > 0 ? (
+        <>
+          <img
+            src={images[currentIndex]}
+            alt={`Slide ${currentIndex + 1}`}
+            className="w-full lg:h-80 h-60 object-cover rounded-t-lg"
+          />
+          {images.length > 1 && (
+            <>
+              <button
+                className="absolute top-1/2 left-4 transform -translate-y-1/2 bg-black bg-opacity-50 text-white rounded-full p-2"
+                onClick={handlePrev}
+              >
+                &#8249;
+              </button>
+              <button
+                className="absolute top-1/2 right-4 transform -translate-y-1/2 bg-black bg-opacity-50 text-white rounded-full p-2"
+                onClick={handleNext}
+              >
+                &#8250;
+              </button>
+            </>
+          )}
+        </>
+      ) : (
+        <div className="w-full h-80 bg-zinc-800 rounded-t-lg flex items-center justify-center">
+          <Package className="w-10 h-10 text-zinc-600" />
+        </div>
+      )}
+    </div>
   );
 };
 

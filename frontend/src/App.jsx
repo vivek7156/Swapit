@@ -15,11 +15,11 @@ import Sidebar from "./components/Sidebar";
 import { useQuery } from "@tanstack/react-query";
 import LoadingSpinner from "./components/LoadingSpinner";
 import { LocateFixed } from "lucide-react";
+import WatchlistPage from "./pages/dashboard/Watchlist";
 
 function App() {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [selectedButton, setSelectedButton] = useState("Shop");
-  const navigate = useNavigate();
   const location = useLocation();
 
   const toggleSidebar = () => {
@@ -48,22 +48,24 @@ function App() {
       }
     }
   });
-
+  
+  
   // // Redirect to login if authUser is not available
   // useEffect(() => {
-  //   if (!authUser && !isLoading) {
-  //     navigate('/login');
-  //   }
-  // }, [authUser, isLoading, navigate]);
-
-  if(isLoading){
-    return(
-      <div className="flex justify-center items-center h-screen">
+    //   if (!authUser && !isLoading) {
+      //     navigate('/login');
+      //   }
+      // }, [authUser, isLoading, navigate]);
+      
+      if(isLoading){
+        return(
+          <div className="flex justify-center items-center h-screen">
         <LoadingSpinner size="lg" />
       </div>
     );
   }
-
+  
+  localStorage.setItem('authUserId', authUser._id);
   return (
     <div className="">
       {authUser && <Navbar toggleSidebar={toggleSidebar} />}
@@ -75,6 +77,7 @@ function App() {
           setSidebarOpen={setSidebarOpen}
           selectedButton={selectedButton}
           setSelectedButton={setSelectedButton}
+          toggleSidebar={toggleSidebar}
         />
       )}
       <Routes>
@@ -85,8 +88,10 @@ function App() {
         <Route path='/search' element={authUser ? <SearchPage /> : <Navigate to="/login" />} />
         <Route path='/messages' element={authUser ? <MessagingPage /> : <Navigate to="/login" />} />
         <Route path='/listings' element={authUser ? <UserListingsPage /> : <Navigate to="/login" />} />
+        <Route path='/watchlist' element={authUser ? <WatchlistPage /> : <Navigate to="/login" />} />
         <Route path='/profile/:username' element={authUser ? <UserProfile /> : <Navigate to="/login" />} />
         <Route path='/notifications' element={authUser ? <NotificationsPage /> : <Navigate to="/login" />} />
+        <Route path='/chat/:id' element={authUser ? <MessagingPage authUserId={authUser._id} /> : <Navigate to="/login" />} />
       </Routes>
       <Toaster />
     </div>
