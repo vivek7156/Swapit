@@ -4,7 +4,7 @@ import { Search, Package, Heart } from 'lucide-react';
 import Navbar from '../../components/Navbar';
 import { useQuery, QueryClient, useQueryClient } from '@tanstack/react-query';
 import LoadingSpinner from '../../components/LoadingSpinner';
-import SearchableDropdown from '../../components/ui/searchableDropdown';
+import SearchableDropdown from '../../components/ui/searchableDropdown.jsx';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
