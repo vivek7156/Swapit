@@ -14,7 +14,7 @@ import { useParams } from "react-router-dom";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import axios from "axios";
 import Sidebar from "@/components/Sidebar";
-import SearchableDropdown from "../../components/ui/SearchableDropdown";
+import SearchableDropdown from "../../components/ui/searchableDropdown.jsx";
 
 
 function UserProfile() {
