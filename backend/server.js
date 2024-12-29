@@ -17,6 +17,8 @@ import http from 'http';
 dotenv.config();
 const app = express();
 const server = http.createServer(app);
+const PORT = process.env.PORT || 5000;
+const __dirname = path.resolve();
 
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -29,7 +31,6 @@ app.use(express.json({limit: '10mb'}));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
 
-connectMongoDB();
 
 app.use("/api", collegeRoutes);
 app.use("/api/auth", authRoutes);
@@ -39,10 +40,19 @@ app.use('/api/items', itemRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/chat', chatRoutes);
 
-import { initializeSocket } from './socketio/socket.js';
-initializeSocket(server);
+if(process.env.NODE_ENV === "production"){
+    app.use(express.static(path.join(__dirname,"/frontend/dist")));
 
-const PORT = process.env.PORT || 5000;
+    app.get("*", (req, res) => {
+        res.sendFile(path.resolve(__dirname, "frontend", "dist", "index.html"));
+    })
+}
+
+import { initializeSocket } from './socketio/socket.js';
+import path from 'path';
+initializeSocket(server);
+connectMongoDB();
+
 server.listen(PORT, () => {
     console.log(`Server is running on ${PORT}`);
     
