@@ -20,7 +20,7 @@ const WatchlistPage = () => {
   });
 
   useEffect(() => {
-    if(!authUser?._id) return;
+    if (!authUser?._id) return;
 
     const fetchWatchlist = async () => {
       try {
@@ -126,11 +126,14 @@ const WatchlistPage = () => {
       <div className="flex-1 bg-zinc-900 p-8">
         <div className="max-w-7xl mx-auto">
           <h1 className="text-2xl font-semibold text-white mb-6">Your Watchlist</h1>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6">
             {listings.map((listing) => (
               <div key={listing._id} className="bg-zinc-800 rounded-lg shadow-sm overflow-hidden">
-                <div className="relative">
-                  <ImageSlider images={listing.images} />
+                <div className="relative w-full h-48">
+                  <ImageSlider
+                    images={listing.images}
+                    className="w-full h-full object-cover"
+                  />
                 </div>
                 <div className="p-4">
                   <div className="flex justify-between items-start border-b border-zinc-700 pb-4">
@@ -199,14 +202,14 @@ const WatchlistPage = () => {
                           )}
                         </div>
                       )}
-                <div className="mt-4 flex justify-end items-center">
-                    <button
-                      onClick={() => handleRemoveFromWatchlist(listing._id)}
-                      className="px-2 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600"
-                    >
-                      Remove
-                    </button>
-                  </div>
+                      <div className="mt-4 flex justify-end items-center">
+                        <button
+                          onClick={() => handleRemoveFromWatchlist(listing._id)}
+                          className="px-2 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                        >
+                          Remove
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>

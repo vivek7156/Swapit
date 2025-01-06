@@ -13,8 +13,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useParams } from "react-router-dom";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import axios from "axios";
-import Sidebar from "@/components/Sidebar";
-import SearchableDropdown from "../../components/ui/searchableDropdown.jsx";
+import SearchableDropdown from "../../components/SearchableDropdown";
 
 
 function UserProfile() {

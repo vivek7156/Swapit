@@ -34,7 +34,9 @@ function App() {
     queryKey: ['authUser'],
     queryFn: async () => {
       try {
-        const res = await fetch('/api/auth/myprofile');
+        const res = await fetch('/api/auth/myprofile', {
+          credentials: 'include',
+        });
         const data = await res.json();
         if(data.error) return null;
         if (!res.ok) {
@@ -64,8 +66,9 @@ function App() {
       </div>
     );
   }
-  
-  localStorage.setItem('authUserId', authUser._id);
+  if (authUser?._id) {
+    localStorage.setItem('authUserId', authUser._id);
+  }
   return (
     <div className="">
       {authUser && <Navbar toggleSidebar={toggleSidebar} />}

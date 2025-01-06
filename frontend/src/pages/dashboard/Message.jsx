@@ -91,11 +91,10 @@ const MessagingPage = ({ }) => {
     }
 
     try {
-      // First, validate that we have a valid conversationId
       console.log('Fetching conversation:', conversationId);
 
       const response = await axios.get(`/api/chat/conversations/${conversationId}`, {
-        withCredentials: true // Ensure cookies are sent
+        withCredentials: true
       });
       console.log('Conversation:', response.data);
 
@@ -104,10 +103,9 @@ const MessagingPage = ({ }) => {
         setMessages(response.data.conversation.messages || []);
         setParticipants(response.data.conversation.participants || []);
 
-        // Join the socket room
+
         socket.emit('joinChat', { conversationId: response.data.conversation._id });
 
-        // Scroll to bottom of messages
         scrollToBottom();
       } else {
         console.error('Invalid conversation data received:', response.data);
@@ -322,8 +320,11 @@ const MessagingPage = ({ }) => {
                     {request.message || "No messages yet"}
                   </p>
                 </div>
-                <div className={`flex flex-col items-end ${(request.status !== "rejected") ? 'bg-green-700' : 'bg-red-700'} p-1 bg-transparent rounded-lg`}>
-                  <span className='text-sm '>{request.status}</span>
+                <div
+                  className={`flex flex-col items-end p-1 rounded-lg ${request.status !== 'rejected' ? 'bg-green-700' : 'bg-red-700'
+                    }`}
+                >
+                  <span className="text-sm">{request.status}</span>
                 </div>
               </div>
             </div>
