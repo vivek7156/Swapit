@@ -2,7 +2,7 @@
 
 import { io } from "socket.io-client";
 
-const SOCKET_URL = 'http://localhost:5000'; // Adjust if your backend runs on a different URL
+const SOCKET_URL = 'http://localhost:5000'; 
 
 const socket = io(SOCKET_URL, {
     withCredentials: true, // Important for cookies/session if used

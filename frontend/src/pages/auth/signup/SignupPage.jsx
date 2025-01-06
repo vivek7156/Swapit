@@ -16,7 +16,7 @@ function SignUpPage(){
     useEffect(() => {
       const fetchColleges = async () => {
         try {
-          const response = await fetch("http://localhost:5000/api/colleges");
+          const response = await fetch(`/api/colleges`);
           const data = await response.json();
           setColleges(data);
         } catch (error) {
