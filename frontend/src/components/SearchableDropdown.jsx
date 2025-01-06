@@ -77,7 +77,7 @@ const SearchableDropdown = ({
                 placeholder="Search colleges..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full p-2 pl-10 bg-zinc-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                className="w-full p-2 pl-10 bg-zinc-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-green-500"
               />
               <Search 
                 className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" 

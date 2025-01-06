@@ -369,7 +369,7 @@ const UserListingsPage = () => {
                         onClick={() => handleEdit(listing)}
                         className="p-2 text-gray-600 hover:bg-gray-900 rounded-lg transition-colors"
                       >
-                        <Edit className="w-5 h-5 text-primary" />
+                        <Edit className="w-5 h-5 text-green-500" />
                       </button>
                       <button
                         onClick={() => handleDelete(listing)}

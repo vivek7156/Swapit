@@ -74,7 +74,7 @@ const Navbar = ({ toggleSidebar, selectedButton, setSelectedButton }) => {
             <button onClick={toggleSidebar} className="lg:hidden text-white">
               <Menu className="w-6 h-6" />
             </button>
-            <h1 className="text-xl font-bold text-primary">SwapIt</h1>
+            <h1 className="text-xl font-bold text-green-500">SwapIt</h1>
           </div>
           <div className="flex items-center space-x-4 relative">
             {/* Notifications Icon */}

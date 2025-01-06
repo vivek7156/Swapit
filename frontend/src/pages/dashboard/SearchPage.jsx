@@ -299,7 +299,7 @@ const SearchPage = () => {
                 <div className="p-4">
                   <div className="flex justify-between items-start">
                     <h3 className="text-lg font-semibold text-gray-100">{listing.title}</h3>
-                    <span className="text-lg font-bold text-primary">Rs.{listing.price}</span>
+                    <span className="text-lg font-bold text-green-500">Rs.{listing.price}</span>
                   </div>
                   <p className="mt-2 text-sm text-gray-300">{listing.description}</p>
                   <div className="mt-4 flex justify-between items-center">
@@ -323,7 +323,7 @@ const SearchPage = () => {
                         )}
                         <a
                           href={`/profile/${listing.createdBy._id}`}
-                          className="text-primary font-medium hover:underline"
+                          className="text-green-500 font-medium hover:underline"
                         >
                           {listing.createdBy?.username || 'Unknown'}
                         </a>

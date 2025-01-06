@@ -59,7 +59,7 @@ function HomePage() {
                   <label className="flex flex-col min-w-40 h-14 w-full max-w-[480px] @[480px]:h-16">
                     <Link to="/signup">
                       <button
-                            class="flex min-w-[84px] max-w-[180px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 @[480px]:h-12 @[480px]:px-5 bg-primary text-white text-sm font-bold leading-normal tracking-[0.015em] @[480px]:text-base @[480px]:font-bold @[480px]:leading-normal @[480px]:tracking-[0.015em]"
+                            class="flex min-w-[84px] max-w-[180px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 @[480px]:h-12 @[480px]:px-5 bg-green-500 text-white text-sm font-bold leading-normal tracking-[0.015em] @[480px]:text-base @[480px]:font-bold @[480px]:leading-normal @[480px]:tracking-[0.015em]"
                         >
                             <span class="truncate">Get started</span>
                         </button></Link>

@@ -14,7 +14,7 @@ const FilterSidebar = ({ priceRange, setPriceRange, categories, selectedCategori
       {/* Button to toggle sidebar */}
       <button
         onClick={toggleSidebar}
-        className="text-black fixed top-[140px] bg-primary p-3 rounded-lg shadow-md z-10 right-8"
+        className="text-black fixed top-[140px] bg-green-500 p-3 rounded-lg shadow-md z-10 right-8"
       >
         <SlidersHorizontal className="w-6 h-6" />
       </button>
@@ -64,7 +64,7 @@ const FilterSidebar = ({ priceRange, setPriceRange, categories, selectedCategori
                     type="checkbox"
                     checked={selectedCategories.includes(category)}
                     onChange={() => toggleCategory(category)}
-                    className="rounded border-gray-300 text-primary focus:ring-green-500"
+                    className="rounded border-gray-300 text-green-500 focus:ring-green-500"
                   />
                   <span className="ml-2 text-sm text-gray-600">{category}</span>
                 </label>
@@ -82,7 +82,7 @@ const FilterSidebar = ({ priceRange, setPriceRange, categories, selectedCategori
                     type="checkbox"
                     checked={selectedColleges.includes(college)}
                     onChange={() => toggleCollege(college)}
-                    className="rounded border-gray-300 text-primary focus:ring-green-500"
+                    className="rounded border-gray-300 text-green-500 focus:ring-green-500"
                   />
                   <span className="ml-2 text-sm text-gray-600">{college}</span>
                 </label>
@@ -98,7 +98,7 @@ const FilterSidebar = ({ priceRange, setPriceRange, categories, selectedCategori
                 <label key={condition} className="flex items-center">
                   <input
                     type="checkbox"
-                    className="rounded border-gray-300 text-primary focus:ring-green-500"
+                    className="rounded border-gray-300 text-green-500 focus:ring-green-500"
                   />
                   <span className="ml-2 text-sm text-gray-600">{condition}</span>
                 </label>
