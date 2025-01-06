@@ -18,5 +18,17 @@ export default defineConfig({
         changeOrigin: true,
       }
     },
-  }, 
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Split react-related libraries into their own chunk
+          'react-vendors': ['react', 'react-dom'],
+        },
+      },
+    },
+    // Optional: increase warning limit if desired
+    chunkSizeWarningLimit: 1500,
+  },
 })
