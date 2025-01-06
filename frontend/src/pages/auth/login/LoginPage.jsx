@@ -49,7 +49,6 @@ const LoginPage = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-<<<<<<< HEAD
   return (
     <div className="min-h-screen flex items-center justify-center bg-zinc-950">
       <div className="flex-1 flex flex-col justify-center items-center">
@@ -92,63 +91,3 @@ const LoginPage = () => {
 };
 
 export default LoginPage;
-=======
-        //         // Redirect to dashboard or home page after login
-        //         navigate("/dashboard"); // Adjust path as needed
-        //     } else {
-        //         const errorData = await response.json();
-        //         console.error("Login error:", errorData.message);
-        //         alert("Login failed. Please check your username and password.");
-        //     }
-        // } catch (error) {
-        //     console.error("Error logging in:", error);
-        // }
-    };
-
-    const handleInputChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
-    };
-
-	return (
-		<div className='max-w-screen-xl mx-auto flex h-screen'>
-			<div className='flex-1 flex flex-col justify-center items-center bg-black'>
-				<form className='flex gap-4 flex-col sm:w-[25rem] w-[17rem]' onSubmit={handleSubmit}>
-					<h1 className='text-4xl font-extrabold text-white'>{"Let's"} go.</h1>
-					<label className='input input-bordered rounded flex items-center gap-2'>
-						<MdOutlineMail />
-						<input
-							type='text'
-							className='grow'
-							placeholder='Email'
-							name='email'
-							onChange={handleInputChange}
-							value={formData.email}
-						/>
-					</label>
-
-					<label className='input input-bordered rounded flex items-center gap-2'>
-						<MdPassword />
-						<input
-							type='password'
-							className='grow'
-							placeholder='Password'
-							name='password'
-							onChange={handleInputChange}
-							value={formData.password}
-						/>
-					</label>
-					<button className='btn rounded-xl btn-primary text-white'>Login</button>
-					{isError && <p className='text-red-500'>{error.message}</p>}
-				</form>
-				<div className='flex flex-col gap-2 mt-4 sm:w-[25rem] w-[17rem]'>
-					<p className='text-white text-lg'>{"Don't"} have an account?</p>
-					<Link to='/signup'>
-						<button className='btn rounded-xl btn-primary text-white btn-outline sm:w-[25rem] w-[17rem]'>Sign up</button>
-					</Link>
-				</div>
-			</div>
-		</div>
-	);
-};
-export default LoginPage;
->>>>>>> b42aa2fb0b266c6ca1abf3fd017f4935d5dd0a38
