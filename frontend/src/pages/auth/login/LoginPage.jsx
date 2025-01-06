@@ -74,7 +74,7 @@ const LoginPage = () => {
 
 	return (
 		<div className='max-w-screen-xl mx-auto flex h-screen'>
-			<div className='flex-1 flex flex-col justify-center items-center'>
+			<div className='flex-1 flex flex-col justify-center items-center bg-black'>
 				<form className='flex gap-4 flex-col sm:w-[25rem] w-[17rem]' onSubmit={handleSubmit}>
 					<h1 className='text-4xl font-extrabold text-white'>{"Let's"} go.</h1>
 					<label className='input input-bordered rounded flex items-center gap-2'>
