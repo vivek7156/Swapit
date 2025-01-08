@@ -107,9 +107,9 @@ function SignUpPage() {
               value={formData.password}
             />
           </label>
-          <label htmlFor="college" className="w-full font-medium text-lg text-white h-10">Select Your College</label>
+          <label htmlFor="college" className="w-full font-medium text-lg text-white">Select Your College</label>
           <details className="dropdown w-full dropdown-top">
-            <summary className="btn m-1 w-full bg-zinc-800 rounded-xl text-white">
+            <summary className="btn m-1 w-full bg-zinc-800 rounded-xl text-white h-10">
               {selectedCollege || "Select College"}
             </summary>
             <ul className="dropdown-content menu bg-base-100 rounded-box z-[1] w-full p-2 shadow text-lg">
