@@ -188,7 +188,7 @@ const SearchPage = () => {
                   />
                   <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                 </div>
-                <button type='submit' className="bg-primary text-black px-6 py-3 rounded-lg hover:bg-green-700 transition-colors">
+                <button type='submit' className="bg-green-500 text-black px-6 py-3 rounded-lg hover:bg-green-700 transition-colors">
                   Search
                 </button>
               </div>
@@ -234,7 +234,7 @@ const SearchPage = () => {
 
                   {/* Reset Button */}
                   <button
-                    className="px-4 py-2 bg-primary text-white rounded-lg"
+                    className="px-4 py-2 bg-green-500 text-white rounded-lg"
                     onClick={() => {
                       setMinPrice(0);
                       setMaxPrice(100000);
