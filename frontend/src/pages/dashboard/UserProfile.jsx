@@ -139,11 +139,6 @@ function UserProfile() {
                   value={user.user.college.name || "Not Set"}
                 />
               </div>
-
-              {/* Bio */}
-              {user.user.bio && (
-                <p className="text-gray-300 mb-4">{user.user.bio}</p>
-              )}
             </div>
           </div>
         </div>
