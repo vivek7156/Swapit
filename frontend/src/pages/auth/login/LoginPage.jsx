@@ -54,35 +54,35 @@ const LoginPage = () => {
       <div className="flex-1 flex flex-col justify-center items-center">
         <form className="flex gap-4 flex-col sm:w-[25rem] w-[17rem]" onSubmit={handleSubmit}>
           <h1 className="text-4xl font-extrabold text-white">{"Let's"} go.</h1>
-          <label className="input input-bordered rounded flex items-center gap-2 bg-zinc-800 text-white">
+          <label className="input input-bordered rounded flex items-center gap-2 bg-zinc-800 text-white px-2">
             <MdOutlineMail />
             <input
               type="text"
-              className="grow bg-transparent border-none focus:ring-0 h-9"
+              className="grow bg-transparent border-none focus:ring-0 h-10"
               placeholder="Email"
               name="email"
               onChange={handleInputChange}
               value={formData.email}
             />
           </label>
-          <label className="input input-bordered rounded flex items-center gap-2 bg-zinc-800 text-white">
+          <label className="input input-bordered rounded flex items-center gap-2 bg-zinc-800 text-white px-2">
             <MdPassword />
             <input
               type="password"
-              className="grow bg-transparent border-none focus:ring-0 h-9"
+              className="grow bg-transparent border-none focus:ring-0 h-10"
               placeholder="Password"
               name="password"
               onChange={handleInputChange}
               value={formData.password}
             />
           </label>
-          <button className="btn rounded-xl btn-primary text-white bg-green-500 hover:bg-green-600 h-9">Login</button>
+          <button className="btn rounded-xl btn-primary text-white bg-green-500 hover:bg-green-600 h-10">Login</button>
           {isError && <p className="text-red-500">{error.message}</p>}
         </form>
         <div className="flex flex-col gap-2 mt-4 sm:w-[25rem] w-[17rem]">
           <p className="text-white text-lg">{"Don't"} have an account?</p>
           <Link to="/signup">
-            <button className="btn rounded-xl btn-primary text-white btn-outline w-full hover:bg-green-600 hover:text-black h-9 border border-1 border-white">Sign up</button>
+            <button className="btn rounded-xl btn-primary text-white btn-outline w-full hover:bg-green-600 hover:text-black h-10 border border-1 border-white">Sign up</button>
           </Link>
         </div>
       </div>
