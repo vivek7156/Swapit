@@ -58,7 +58,7 @@ const LoginPage = () => {
             <MdOutlineMail />
             <input
               type="text"
-              className="grow bg-transparent border-none focus:ring-0"
+              className="grow bg-transparent border-none focus:ring-0 h-9"
               placeholder="Email"
               name="email"
               onChange={handleInputChange}
@@ -69,20 +69,20 @@ const LoginPage = () => {
             <MdPassword />
             <input
               type="password"
-              className="grow bg-transparent border-none focus:ring-0"
+              className="grow bg-transparent border-none focus:ring-0 h-9"
               placeholder="Password"
               name="password"
               onChange={handleInputChange}
               value={formData.password}
             />
           </label>
-          <button className="btn rounded-xl btn-primary text-white bg-green-500 hover:bg-green-600">Login</button>
+          <button className="btn rounded-xl btn-primary text-white bg-green-500 hover:bg-green-600 h-9">Login</button>
           {isError && <p className="text-red-500">{error.message}</p>}
         </form>
         <div className="flex flex-col gap-2 mt-4 sm:w-[25rem] w-[17rem]">
           <p className="text-white text-lg">{"Don't"} have an account?</p>
           <Link to="/signup">
-            <button className="btn rounded-xl btn-primary text-white btn-outline w-full">Sign up</button>
+            <button className="btn rounded-xl btn-primary text-white btn-outline w-full hover:bg-green-600 hover:text-black h-9 border border-1 border-white">Sign up</button>
           </Link>
         </div>
       </div>
