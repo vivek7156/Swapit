@@ -1,220 +1,442 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
 import { Link } from "react-router-dom";
+import { ArrowRight, Camera, ShieldCheck, Search, Menu, X, MessageCircle, MapPin, CheckCircle, Plus, Minus } from "lucide-react";
+import logo from "../../assets/logo.png";
+import illustrationLeft from "../../assets/illustration-left.png";
+import illustrationRight from "../../assets/illustration-right.png";
+import { motion } from "framer-motion";
 
 function HomePage() {
-    return (
-<div className="relative flex size-full min-h-screen flex-col bg-[#141414] dark group/design-root overflow-x-hidden" style={{ fontFamily: '"Plus Jakarta Sans", "Noto Sans", sans-serif' }}>
-      <div className="layout-container flex h-full grow flex-col">
-        <header className="flex items-center justify-between whitespace-nowrap border-b border-solid border-b-[#292929] px-10 py-3">
-          <div className="flex items-center gap-4 text-[#FFFFFF]">
-            <div className="size-4">
-              <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path
-                  fill-rule="evenodd"
-                  clip-rule="evenodd"
-                  d="M39.475 21.6262C40.358 21.4363 40.6863 21.5589 40.7581 21.5934C40.7876 21.655 40.8547 21.857 40.8082 22.3336C40.7408 23.0255 40.4502 24.0046 39.8572 25.2301C38.6799 27.6631 36.5085 30.6631 33.5858 33.5858C30.6631 36.5085 27.6632 38.6799 25.2301 39.8572C24.0046 40.4502 23.0255 40.7407 22.3336 40.8082C21.8571 40.8547 21.6551 40.7875 21.5934 40.7581C21.5589 40.6863 21.4363 40.358 21.6262 39.475C21.8562 38.4054 22.4689 36.9657 23.5038 35.2817C24.7575 33.2417 26.5497 30.9744 28.7621 28.762C30.9744 26.5497 33.2417 24.7574 35.2817 23.5037C36.9657 22.4689 38.4054 21.8562 39.475 21.6262ZM4.41189 29.2403L18.7597 43.5881C19.8813 44.7097 21.4027 44.9179 22.7217 44.7893C24.0585 44.659 25.5148 44.1631 26.9723 43.4579C29.9052 42.0387 33.2618 39.5667 36.4142 36.4142C39.5667 33.2618 42.0387 29.9052 43.4579 26.9723C44.1631 25.5148 44.659 24.0585 44.7893 22.7217C44.9179 21.4027 44.7097 19.8813 43.5881 18.7597L29.2403 4.41187C27.8527 3.02428 25.8765 3.02573 24.2861 3.36776C22.6081 3.72863 20.7334 4.58419 18.8396 5.74801C16.4978 7.18716 13.9881 9.18353 11.5858 11.5858C9.18354 13.988 7.18717 16.4978 5.74802 18.8396C4.58421 20.7334 3.72865 22.6081 3.36778 24.2861C3.02574 25.8765 3.02429 27.8527 4.41189 29.2403Z"
-                  fill="white"
-                ></path>
-              </svg>
-            </div>
-            <h2 className="text-[#FFFFFF] text-lg font-bold leading-tight tracking-[-0.015em]">SwapIt</h2>
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [openFaqIndex, setOpenFaqIndex] = useState(null);
+
+  const toggleFaq = (index) => {
+    setOpenFaqIndex(openFaqIndex === index ? null : index);
+  };
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  return (
+    <div className="min-h-screen bg-[#0a0a0a] text-white selection:bg-green-500/30 selection:text-green-200">
+      {/* Navigation */}
+      <nav
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? "bg-[#0a0a0a]/80 backdrop-blur-md border-b border-white/10" : "bg-transparent"
+          }`}
+      >
+        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+          <Link to="/" className="flex items-center gap-2 group">
+            <img src={logo} alt="SwapIt Logo" className="size-8 group-hover:scale-110 transition-transform" />
+            <span className="text-xl font-bold tracking-tight">SwapIt</span>
+          </Link>
+
+          {/* Desktop Nav */}
+          <div className="hidden md:flex items-center gap-8">
+            <a href="#features" className="text-sm font-medium text-zinc-400 hover:text-white transition-colors">Features</a>
+            <a href="#categories" className="text-sm font-medium text-zinc-400 hover:text-white transition-colors">Categories</a>
+            <a href="#" className="text-sm font-medium text-zinc-400 hover:text-white transition-colors">Community</a>
           </div>
-          <div className="flex-1 justify-center gap-8 ">
-            <div className="flex items-center gap-9 justify-end">
-              <a className="text-[#FFFFFF] text-sm font-medium leading-normal hidden" href="#">Browse</a>
-              <a className="text-[#FFFFFF] text-sm font-medium leading-normal hidden" href="#">Post a listing</a>
-              <a className="text-[#FFFFFF] text-sm font-medium leading-normal hidden" href="#">Help</a>
-            </div>
-            <div className="ml-[40vw] sm:ml-[60vw] md:ml-[70vw]">
-            <Link to="/login">
-            <button
-              className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-[#292929] text-[#FFFFFF] text-sm font-bold leading-normal tracking-[0.015em]"
+
+          <div className="hidden md:flex items-center gap-4">
+            <Link to="/login" className="text-sm font-medium hover:text-white text-zinc-300 transition-colors">
+              Log in
+            </Link>
+            <Link
+              to="/signup"
+              className="h-10 px-5 rounded-full bg-white text-black text-sm font-semibold flex items-center hover:bg-zinc-200 transition-colors"
             >
-              <span className="truncate">Log in</span>
-            </button>
-            </Link></div>
+              Get Started
+            </Link>
           </div>
-        </header>
-        <div className="px-16 flex flex-1 justify-center py-5">
-          <div className="layout-content-container flex flex-col max-w-[1160px] flex-1">
-            <div className="@container">
-              <div className="@[480px]:p-4">
-                <div
-                  className="flex min-h-[480px] rounded-xl flex-col gap-6 bg-cover bg-center bg-no-repeat @[480px]:gap-8 @[480px]:rounded-lg items-start justify-end px-4 pb-10 @[480px]:px-10"
-                  style={{
-                    backgroundImage: 'linear-gradient(rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.4) 100%), url("https://cdn.usegalileo.ai/sdxl10/dc073f83-84e9-4ad1-8901-b24088d93d40.png")'
-                  }}
-                >
-                  <div className="flex flex-col gap-2 text-left">
-                    <h1
-                      className="text-white text-4xl font-black leading-tight tracking-[-0.033em] @[480px]:text-5xl @[480px]:font-black @[480px]:leading-tight @[480px]:tracking-[-0.033em]"
-                    >
-                      Welcome to SwapIt
-                    </h1>
-                    <h2 className="text-white text-md font-normal leading-normal @[480px]:text-base @[480px]:font-normal @[480px]:leading-normal">
-                      A marketplace made for college students. Buy, sell, and trade with people you know
-                    </h2>
-                  </div>
-                  <label className="flex flex-col min-w-40 h-14 w-full max-w-[480px] @[480px]:h-16">
-                    <Link to="/signup">
-                      <button
-                            class="flex min-w-[84px] max-w-[180px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 @[480px]:h-12 @[480px]:px-5 bg-green-500 text-white text-sm font-bold leading-normal tracking-[0.015em] @[480px]:text-base @[480px]:font-bold @[480px]:leading-normal @[480px]:tracking-[0.015em]"
-                        >
-                            <span class="truncate">Get started</span>
-                        </button></Link>
-                  </label>
+
+          {/* Mobile Menu Toggle */}
+          <button className="md:hidden text-white" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+            {mobileMenuOpen ? <X /> : <Menu />}
+          </button>
+        </div>
+
+        {/* Mobile Nav Dropdown */}
+        {mobileMenuOpen && (
+          <div className="absolute top-20 left-0 right-0 bg-[#0a0a0a] border-b border-white/10 p-6 flex flex-col gap-4 md:hidden animate-in slide-in-from-top-5">
+            <a href="#features" className="text-lg font-medium text-zinc-400 hover:text-white" onClick={() => setMobileMenuOpen(false)}>Features</a>
+            <a href="#categories" className="text-lg font-medium text-zinc-400 hover:text-white" onClick={() => setMobileMenuOpen(false)}>Categories</a>
+            <div className="h-px bg-white/10 my-2" />
+            <Link to="/login" className="text-lg font-medium text-white" onClick={() => setMobileMenuOpen(false)}>Log in</Link>
+            <Link to="/signup" className="h-12 rounded-lg bg-green-500 flex items-center justify-center text-black font-bold" onClick={() => setMobileMenuOpen(false)}>Get Started</Link>
+          </div>
+        )}
+      </nav>
+
+      {/* Hero Section */}
+      <section className="relative pt-32 pb-20 md:pt-64 md:pb-32 px-6 overflow-hidden">
+        {/* Background Gradients */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-green-500/20 rounded-full blur-[120px] -z-10 pointer-events-none" />
+        <div className="absolute bottom-0 right-0 w-[800px] h-[600px] bg-emerald-500/10 rounded-full blur-[120px] -z-10 pointer-events-none" />
+
+        {/* Hero Illustrations (Desktop) */}
+        <motion.div
+          initial={{ opacity: 0, x: -50 }}
+          animate={{ opacity: 0.9, x: 0, y: [0, -20, 0] }}
+          transition={{
+            opacity: { duration: 1 },
+            x: { duration: 1 },
+            y: { repeat: Infinity, duration: 5, ease: "easeInOut" }
+          }}
+          className="hidden lg:block absolute top-1/2 -translate-y-1/2 left-0 w-[250px] xl:w-[300px]"
+        >
+          <img src={illustrationLeft} alt="Student browsing" className="w-full h-auto object-contain drop-shadow-2xl" />
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, x: 50 }}
+          animate={{ opacity: 0.9, x: 0, y: [0, -25, 0] }}
+          transition={{
+            opacity: { duration: 1 },
+            x: { duration: 1 },
+            y: { repeat: Infinity, duration: 6, ease: "easeInOut", delay: 0.5 }
+          }}
+          className="hidden lg:block absolute top-1/2 -translate-y-1/2 right-0 w-[300px] xl:w-[350px]"
+        >
+          <img src={illustrationRight} alt="Student success" className="w-full h-auto object-contain drop-shadow-2xl" />
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.2 }}
+          className="max-w-4xl mx-auto text-center flex flex-col items-center relative z-10"
+        >
+
+          <h1 className="text-5xl md:text-7xl font-bold tracking-tight leading-[1.1] mb-6 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-100">
+            Buy, Sell, and Trade <br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-600">
+              Campus Wide.
+            </span>
+          </h1>
+
+          <p className="text-lg md:text-xl text-zinc-400 max-w-2xl mb-10 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-200">
+            SwapIt is the safest, easiest, and fastest way to trade textbooks, electronics, and dorm essentials with students on your campus.
+          </p>
+
+          <div className="flex flex-col sm:flex-row items-center gap-4 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-300">
+            <Link to="/signup">
+              <button className="h-12 px-8 rounded-full bg-green-500 text-black font-semibold hover:bg-green-400 transition-all hover:scale-105 active:scale-95 flex items-center gap-2 group">
+                Start Trading
+                <ArrowRight className="size-4 group-hover:translate-x-1 transition-transform" />
+              </button>
+            </Link>
+            <button className="h-12 px-8 rounded-full bg-white/5 border border-white/10 text-white font-semibold hover:bg-white/10 transition-all">
+              Explore Listings
+            </button>
+          </div>
+        </motion.div>
+      </section>
+
+      {/* Features Grid */}
+      <section id="features" className="py-24 px-6 md:px-0">
+        <div className="max-w-7xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-16"
+          >
+            <h2 className="text-3xl md:text-5xl font-bold mb-4">Why choose SwapIt?</h2>
+            <p className="text-zinc-400 max-w-xl mx-auto">Everything you need to buy and sell safely on campus.</p>
+          </motion.div>
+
+          <div className="grid md:grid-cols-3 gap-6 px-4">
+            {[
+              {
+                icon: <ShieldCheck className="size-8 text-green-400" />,
+                title: "Verified Students",
+                desc: "Every user is verified with their .edu email address. Know exactly who you're dealing with."
+              },
+              {
+                icon: <Camera className="size-8 text-purple-400" />,
+                title: "Snap & List",
+                desc: "List an item in under 30 seconds. Just take a photo, add a price, and you're done."
+              },
+              {
+                icon: <Search className="size-8 text-blue-400" />,
+                title: "Smart Search",
+                desc: "Find exactly what you need for your specific classes and dorm requirements."
+              }
+            ].map((feature, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: i * 0.2 }}
+                className="p-8 rounded-2xl bg-zinc-900/50 border border-white/5 hover:border-green-500/30 transition-colors group"
+              >
+                <div className="h-14 w-14 rounded-xl bg-zinc-800 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                  {feature.icon}
                 </div>
-              </div>
-            </div>
-            <div className="flex flex-col gap-10 px-4 py-10 @container">
-              <div className="flex flex-col gap-4">
-                <h1
-                  className="text-[#FFFFFF] tracking-light text-[32px] font-bold leading-tight @[480px]:text-4xl @[480px]:font-black @[480px]:leading-tight @[480px]:tracking-[-0.033em] max-w-[720px]"
-                >
-                  Why SwapIt?
-                </h1>
-                <p className="text-[#FFFFFF] text-base font-normal leading-normal max-w-[720px]">
-                  SwapIt is the easiest way to buy, sell, and trade with other college students. Here are a few reasons why you'll love it.
-                </p>
-              </div>
-              <div className="grid grid-cols-[repeat(auto-fit,minmax(158px,1fr))] gap-3">
-                <div className="flex flex-col gap-3 pb-3">
-                  <div
-                    className="w-full bg-center bg-no-repeat aspect-video bg-cover rounded-lg"
-                    style={{
-                        backgroundImage: 'linear-gradient(rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.4) 100%), url("https://cdn.usegalileo.ai/stability/81112fe1-23d0-4322-97f7-7e420106535d.png")'
-                      }}
-                  ></div>
-                  <div>
-                    <p className="text-[#FFFFFF] text-base font-medium leading-normal">Built for college students</p>
-                    <p className="text-[#C4C4C4] text-sm font-normal leading-normal">Get exclusive deals and offers from the brands you love.</p>
-                  </div>
-                </div>
-                <div className="flex flex-col gap-3 pb-3">
-                  <div
-                    className="w-full bg-center bg-no-repeat aspect-video bg-cover rounded-lg"
-                    style={{
-                        backgroundImage: 'linear-gradient(rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.4) 100%), url("https://cdn.usegalileo.ai/stability/a279e299-fffe-4469-a2a5-c5c88f5ae60d.png")'
-                      }}
-                  ></div>
-                  <div>
-                    <p className="text-[#FFFFFF] text-base font-medium leading-normal">List an item in minutes</p>
-                    <p className="text-[#C4C4C4] text-sm font-normal leading-normal">Snap a photo, add a description, and set a price. It's that easy.</p>
-                  </div>
-                </div>
-                <div className="flex flex-col gap-3 pb-3">
-                  <div
-                    className="w-full bg-center bg-no-repeat aspect-video bg-cover rounded-lg"
-                    style={{
-                        backgroundImage: 'linear-gradient(rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.4) 100%), url("https://cdn.usegalileo.ai/sdxl10/3a7ab754-21ec-4f51-9a45-e375a7528ad6.png")'
-                      }}></div>
-                  <div>
-                    <p className="text-[#FFFFFF] text-base font-medium leading-normal">Verified by our community</p>
-                    <p className="text-[#C4C4C4] text-sm font-normal leading-normal">Know that you're buying from another student. We verify every profile.</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <h2 className="text-[#FFFFFF] text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5">Featured categories</h2>
-            <div className="grid grid-cols-[repeat(auto-fit,minmax(158px,1fr))] gap-3 p-4">
-              <div className="flex flex-col gap-3 pb-3">
-                <div
-                  className="w-full bg-center bg-no-repeat aspect-square bg-cover rounded-lg"
-                  style={{
-                    backgroundImage: 'linear-gradient(rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.4) 100%), url("https://cdn.usegalileo.ai/sdxl10/7e631aa4-abfa-48d5-a209-6e68a02e7cb5.png")'
-                  }} ></div>
-                <p className="text-[#FFFFFF] text-base font-medium leading-normal">Textbooks</p>
-              </div>
-              <div className="flex flex-col gap-3 pb-3">
-                <div
-                  className="w-full bg-center bg-no-repeat aspect-square bg-cover rounded-lg"
-                  style={{
-                    backgroundImage: 'linear-gradient(rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.4) 100%), url("https://cdn.usegalileo.ai/stability/d8cea2bc-0a8b-47ab-aea3-476742d349ff.png")'
-                  }}
-                ></div>
-                <p className="text-[#FFFFFF] text-base font-medium leading-normal">Electronics</p>
-              </div>
-              <div className="flex flex-col gap-3 pb-3">
-                <div
-                  className="w-full bg-center bg-no-repeat aspect-square bg-cover rounded-lg"
-                  style={{
-                    backgroundImage: 'linear-gradient(rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.4) 100%), url("https://cdn.usegalileo.ai/stability/406afc34-bd32-4598-bb10-63cc70468ac0.png")'
-                  }}  ></div>
-                <p className="text-[#FFFFFF] text-base font-medium leading-normal">Furniture</p>
-              </div>
-              <div className="flex flex-col gap-3 pb-3">
-                <div
-                  className="w-full bg-center bg-no-repeat aspect-square bg-cover rounded-lg"
-                  style={{
-                    backgroundImage: 'linear-gradient(rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.4) 100%), url("https://cdn.usegalileo.ai/stability/859dfa4a-2940-4c40-bb93-c86152374691.png")'
-                  }} ></div>
-                <p className="text-[#FFFFFF] text-base font-medium leading-normal">Apparel</p>
-              </div>
-            </div>
-            <h2 className="text-[#FFFFFF] text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5">Get started with SwapIt</h2>
-            <div className="grid grid-cols-[repeat(auto-fit,minmax(158px,1fr))] gap-3 p-4">
-              <div className="flex flex-1 gap-3 rounded-lg border border-[#383838] bg-[#242424] p-4 flex-col">
-                <div className="text-[#FFFFFF]" data-icon="Camera" data-size="24px" data-weight="regular">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
-                    <path
-                        d="M208,56H180.28L166.65,35.56A8,8,0,0,0,160,32H96a8,8,0,0,0-6.65,3.56L75.71,56H48A24,24,0,0,0,24,80V192a24,24,0,0,0,24,24H208a24,24,0,0,0,24-24V80A24,24,0,0,0,208,56Zm8,136a8,8,0,0,1-8,8H48a8,8,0,0,1-8-8V80a8,8,0,0,1,8-8H80a8,8,0,0,0,6.66-3.56L100.28,48h55.43l13.63,20.44A8,8,0,0,0,176,72h32a8,8,0,0,1,8,8ZM128,88a44,44,0,1,0,44,44A44.05,44.05,0,0,0,128,88Zm0,72a28,28,0,1,1,28-28A28,28,0,0,1,128,160Z"                    ></path>
-                  </svg>
-                </div>
-                <div className="flex flex-col gap-1">
-                  <h2 className="text-[#FFFFFF] text-base font-bold leading-tight">Snap a photo</h2>
-                  <p className="text-[#C4C4C4] text-sm font-normal leading-normal">Take a picture of your item and add a description</p>
-                </div>
-              </div>
-              <div className="flex flex-1 gap-3 rounded-lg border border-[#383838] bg-[#242424] p-4 flex-col">
-                <div className="text-[#FFFFFF]" data-icon="List" data-size="24px" data-weight="regular">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
-                    <path
-                      d="M224,128a8,8,0,0,1-8,8H40a8,8,0,0,1,0-16H216A8,8,0,0,1,224,128ZM40,72H216a8,8,0,0,0,0-16H40a8,8,0,0,0,0,16ZM216,184H40a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16Z"
-                    ></path>
-                  </svg>
-                </div>
-                <div className="flex flex-col gap-1">
-                  <h2 className="text-[#FFFFFF] text-base font-bold leading-tight">List in seconds</h2>
-                  <p className="text-[#C4C4C4] text-sm font-normal leading-normal">Set a price and list your item in under a minute</p>
-                </div>
-              </div>
-              <div className="flex flex-1 gap-3 rounded-lg border border-[#383838] bg-[#242424] p-4 flex-col">
-                <div className="text-[#FFFFFF]" data-icon="MagnifyingGlass" data-size="24px" data-weight="regular">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
-                    <path
-                      d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z"
-                    ></path>
-                  </svg>
-                </div>
-                <div className="flex flex-col gap-1">
-                  <h2 className="text-[#FFFFFF] text-base font-bold leading-tight">Find what you need</h2>
-                  <p className="text-[#C4C4C4] text-sm font-normal leading-normal">Shop for textbooks, electronics, furniture, and more</p>
-                </div>
-              </div>
-            </div>
+                <h3 className="text-xl font-bold mb-3 text-zinc-100">{feature.title}</h3>
+                <p className="text-zinc-400 leading-relaxed">{feature.desc}</p>
+              </motion.div>
+            ))}
           </div>
         </div>
-        <footer className="flex justify-center">
-          <div className="flex max-w-[960px] flex-1 flex-col">
-            <footer className="flex flex-col gap-6 px-5 py-10 text-center @container">
-              <div className="flex flex-wrap items-center justify-center gap-6 @[480px]:flex-row @[480px]:justify-around">
-                <a className="text-[#C4C4C4] text-base font-normal leading-normal min-w-40" href="#">About</a>
-                <a className="text-[#C4C4C4] text-base font-normal leading-normal min-w-40" href="#">Blog</a>
-                <a className="text-[#C4C4C4] text-base font-normal leading-normal min-w-40" href="#">Careers</a>
-                <a className="text-[#C4C4C4] text-base font-normal leading-normal min-w-40" href="#">Contact</a>
-                <a className="text-[#C4C4C4] text-base font-normal leading-normal min-w-40" href="#">Help</a>
-                <a className="text-[#C4C4C4] text-base font-normal leading-normal min-w-40" href="#">Download iOS app</a>
-                <a className="text-[#C4C4C4] text-base font-normal leading-normal min-w-40" href="#">Download Android app</a>
-              </div>
-              <p className="text-[#C4C4C4] text-base font-normal leading-normal">@2022 SwapIt</p>
-            </footer>
-          </div>
-        </footer>
-      </div>
-    </div>
-    );
+      </section>
 
+      {/* How it Works Section */}
+      <section className="py-24 bg-[#0a0a0a] relative overflow-hidden">
+        <div className="max-w-7xl mx-auto px-6 relative z-10">
+          <div className="text-center mb-20">
+            <h2 className="text-3xl md:text-5xl font-bold mb-4">How it works</h2>
+            <p className="text-zinc-400">Simple, safe, and social trading in 4 steps.</p>
+          </div>
+
+          <div className="relative grid grid-cols-1 md:grid-cols-4 gap-8">
+            {/* Connecting Line (Desktop) */}
+            <div className="hidden md:block absolute top-[20%] left-[12%] right-[12%] h-0.5 border-t-2 border-dashed border-zinc-800 -z-10" />
+
+            {[
+              {
+                step: "01",
+                title: "List it",
+                desc: "Snap a photo, set a price, and post your item in seconds.",
+                icon: <Camera className="size-6 text-white" />,
+                gradient: "from-orange-400 to-pink-500"
+              },
+              {
+                step: "02",
+                title: "Chat",
+                desc: "Connect instantly with verified students on your campus.",
+                icon: <MessageCircle className="size-6 text-white" />,
+                gradient: "from-blue-400 to-indigo-500"
+              },
+              {
+                step: "03",
+                title: "Meet up",
+                desc: "Agree on a safe meeting spot on campus to make the swap.",
+                icon: <MapPin className="size-6 text-white" />,
+                gradient: "from-green-400 to-emerald-500"
+              },
+              {
+                step: "04",
+                title: "Done",
+                desc: "Hand over the item and get paid. Review your experience.",
+                icon: <CheckCircle className="size-6 text-white" />,
+                gradient: "from-purple-400 to-violet-500"
+              }
+            ].map((item, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, scale: 0.8 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: i * 0.2 }}
+                className="flex flex-col items-center text-center group"
+              >
+                <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${item.gradient} flex items-center justify-center shadow-lg shadow-white/5 mb-6 hover:scale-110 transition-transform duration-300 relative`}>
+                  <div className="absolute -bottom-3 px-2 py-0.5 rounded-full bg-zinc-900 border border-zinc-800 text-xs font-bold text-zinc-400">
+                    Step {item.step}
+                  </div>
+                  {item.icon}
+                </div>
+                <h3 className="text-xl font-bold mb-3">{item.title}</h3>
+                <p className="text-zinc-400 text-sm leading-relaxed max-w-[200px]">{item.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Featured Categories */}
+      <section id="categories" className="py-24 bg-zinc-900/20">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="flex items-end justify-between mb-12">
+            <div>
+              <h2 className="text-3xl md:text-4xl font-bold mb-2">Popular Categories</h2>
+              <p className="text-zinc-400">Find what you're looking for.</p>
+            </div>
+            <a href="#" className="hidden md:flex items-center gap-2 text-green-400 hover:text-green-300 font-medium transition-colors">
+              View all <ArrowRight className="size-4" />
+            </a>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[
+              { name: "Textbooks", img: "https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&q=80&w=600" },
+              { name: "Electronics", img: "https://images.unsplash.com/photo-1550009158-9ebf69173e03?auto=format&fit=crop&q=80&w=600" },
+              { name: "Furniture", img: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&q=80&w=600" },
+              { name: "Clothing", img: "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&q=80&w=600" }
+            ].map((cat, i) => (
+              <div key={i} className="group relative aspect-[4/5] overflow-hidden rounded-2xl cursor-pointer">
+                <img
+                  src={cat.img}
+                  alt={cat.name}
+                  className="absolute inset-0 size-full object-cover transition-transform duration-700 group-hover:scale-110"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                <div className="absolute bottom-0 left-0 p-6">
+                  <h3 className="text-xl font-bold text-white">{cat.name}</h3>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-8 text-center md:hidden">
+            <a href="#" className="inline-flex items-center gap-2 text-green-400 hover:text-green-300 font-medium transition-colors">
+              View all <ArrowRight className="size-4" />
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <motion.section
+        id="faq"
+        className="py-24 bg-[#0a0a0a]"
+        initial={{ opacity: 0, y: 50 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.2 }}
+        transition={{ duration: 0.8 }}
+      >
+        <div className="max-w-3xl mx-auto px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-16"
+          >
+            <h2 className="text-3xl md:text-5xl font-bold mb-4">Frequently Asked Questions</h2>
+            <p className="text-zinc-400">Everything you need to know about SwapIt.</p>
+          </motion.div>
+
+          <div className="space-y-4">
+            {[
+              {
+                q: "Is SwapIt free to use?",
+                a: "Yes! Creating an account, listing items, and browsing is completely free. We don't charge any listing fees."
+              },
+              {
+                q: "How do verify that users are students?",
+                a: "We require a valid .edu email address to sign up. This ensures that everyone on the platform is a verified student at your university."
+              },
+              {
+                q: "How do I pay for items?",
+                a: "Currently, SwapIt facilitates the connection. Payments are handled offline between students (Cash, Venmo, Zelle) when you meet up to exchange the item."
+              },
+              {
+                q: "Is it safe to meet up?",
+                a: "We recommend meeting in public places on campus, such as the library, student center, or coffee shops. Check our safety guidelines for more tips."
+              },
+              {
+                q: "Can I trade items instead of selling?",
+                a: "Absolutely! You can mark your listing as 'Open to Trade' and swap textbooks, electronics, or other gear directly."
+              }
+            ].map((faq, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, x: i % 2 === 0 ? -50 : 50 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: i * 0.1 }}
+                className="border border-white/5 rounded-2xl bg-zinc-900/30 overflow-hidden transition-colors duration-300 hover:border-white/10"
+              >
+                <button
+                  onClick={() => toggleFaq(i)}
+                  className="w-full flex items-center justify-between p-6 text-left"
+                >
+                  <span className="text-lg font-medium text-zinc-100">{faq.q}</span>
+                  {openFaqIndex === i ? (
+                    <Minus className="size-5 text-green-400 flex-shrink-0" />
+                  ) : (
+                    <Plus className="size-5 text-zinc-500 flex-shrink-0" />
+                  )}
+                </button>
+                <div
+                  className={`grid transition-[grid-template-rows] duration-300 ease-out ${openFaqIndex === i ? "grid-rows-[1fr] pb-6" : "grid-rows-[0fr]"
+                    }`}
+                >
+                  <div className="overflow-hidden px-6">
+                    <p className="text-zinc-400 leading-relaxed">{faq.a}</p>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </motion.section>
+
+      {/* CTA Section */}
+      <section className="py-32 px-6">
+        <div className="max-w-5xl mx-auto rounded-3xl bg-gradient-to-br from-green-500 to-emerald-700 p-12 md:p-24 text-center relative overflow-hidden">
+          <div className="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 bg-white/20 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-96 h-96 bg-black/10 rounded-full blur-3xl pointer-events-none" />
+
+          <h2 className="relative text-3xl md:text-5xl font-bold text-white mb-6">Ready to start swapping?</h2>
+          <p className="relative text-green-100 text-lg md:text-xl max-w-2xl mx-auto mb-10">
+            Join thousands of students trading on SwapIt today. It's free to join and takes less than a minute.
+          </p>
+          <div className="relative flex flex-col sm:flex-row justify-center gap-4">
+            <Link to="/signup" className="h-14 px-8 rounded-full bg-white text-green-600 font-bold hover:bg-zinc-100 transition-colors flex items-center justify-center">
+              Create Free Account
+            </Link>
+            <Link to="/login" className="h-14 px-8 rounded-full bg-green-700 text-white font-bold hover:bg-green-800 transition-colors flex items-center justify-center">
+              Log In
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="py-12 border-t border-white/10 bg-[#050505]">
+        <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-4 gap-8">
+          <div className="col-span-1 md:col-span-1">
+            <Link to="/" className="flex items-center gap-2 mb-4">
+              <img src={logo} alt="SwapIt Logo" className="size-6" />
+              <span className="text-lg font-bold text-white">SwapIt</span>
+            </Link>
+            <p className="text-zinc-500 text-sm">
+              The student marketplace. Designed for safety, speed, and campus life.
+            </p>
+          </div>
+
+          <div>
+            <h4 className="font-bold text-white mb-4">Company</h4>
+            <ul className="space-y-2 text-sm text-zinc-400">
+              <li><a href="#" className="hover:text-green-400">About</a></li>
+              <li><a href="#" className="hover:text-green-400">Careers</a></li>
+              <li><a href="#" className="hover:text-green-400">Blog</a></li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="font-bold text-white mb-4">Support</h4>
+            <ul className="space-y-2 text-sm text-zinc-400">
+              <li><a href="#" className="hover:text-green-400">Help Center</a></li>
+              <li><a href="#" className="hover:text-green-400">Safety Guidelines</a></li>
+              <li><a href="#" className="hover:text-green-400">Contact Us</a></li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="font-bold text-white mb-4">Legal</h4>
+            <ul className="space-y-2 text-sm text-zinc-400">
+              <li><a href="#" className="hover:text-green-400">Privacy Policy</a></li>
+              <li><a href="#" className="hover:text-green-400">Terms of Service</a></li>
+            </ul>
+          </div>
+        </div>
+        <div className="max-w-7xl mx-auto px-6 mt-12 pt-8 border-t border-white/5 text-center text-sm text-zinc-600">
+          &copy; {new Date().getFullYear()} SwapIt Inc. All rights reserved.
+        </div>
+      </footer>
+    </div>
+  );
 }
 
 export default HomePage;

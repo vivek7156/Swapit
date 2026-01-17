@@ -3,7 +3,6 @@ import { MessageSquare, ArrowUp, ArrowLeft, Send, Image, Paperclip } from 'lucid
 import socket from '../../socket';
 import axios from 'axios';
 import { useNavigate, useParams, Link } from 'react-router-dom';
-import { set } from 'mongoose';
 
 const MessagingPage = ({ }) => {
   const navigate = useNavigate();
