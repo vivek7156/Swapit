@@ -8,21 +8,17 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CheckCircle, Settings, Package, Star, Calendar, MapPin, ChevronLeft, ChevronRight } from "lucide-react";
+import { CheckCircle, Settings, Package, Star, Calendar, MapPin, ChevronLeft, ChevronRight, Edit3, Link as LinkIcon, Mail } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import axios from "axios";
 import SearchableDropdown from "../../components/SearchableDropdown";
-
+import { motion, AnimatePresence } from "framer-motion";
 
 function UserProfile() {
-  const [isSidebarOpen, setSidebarOpen] = useState(false);
-  const [selectedButton, setSelectedButton] = useState("Your profile");
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState("listings");
   const [colleges, setColleges] = useState([]);
-  const toggleSidebar = () => setSidebarOpen(!isSidebarOpen);
   const { username } = useParams();
 
   // Fetch user with listings
@@ -36,7 +32,6 @@ function UserProfile() {
     queryFn: async () => {
       try {
         const res = await axios.get(`/api/users/profile/${username}`);
-        console.log("User profile:", res.data);
         return res.data;
       } catch (err) {
         console.error("Error fetching user profile:", err);
@@ -60,135 +55,177 @@ function UserProfile() {
 
   const userId = user?.user?._id;
   const { data: authUser } = useQuery({ queryKey: ['authUser'] });
-  // Local states for the edit profile modal
-  const [profileImage, setProfileImage] = useState("");
-  const [bio, setBio] = useState("");
-  const [link, setLink] = useState("");
 
   if (isLoading) return <LoadingSpinner />;
-  if (error) return <div className="p-4">Error loading user profile</div>;
-  if (!user) return <div className="p-4">User not found</div>;
+  if (error) return <div className="p-8 text-red-500 text-center">Error loading user profile</div>;
+  if (!user) return <div className="p-8 text-zinc-400 text-center">User not found</div>;
 
-  const memberSinceDate = new Date(user.user.createdAt).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.1 }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0 }
+  };
 
   return (
-    <div className="min-h-screen bg-zinc-900 text-white">
-      <div className="max-w-7xl mx-auto px-4 py-8 lg:pl-72 xl:pl-64 pt-20">
-        {/* Profile Header */}
-        <div className="bg-zinc-800/50 backdrop-blur-sm rounded-xl p-8 mb-8">
-          <div className="flex flex-col md:flex-row gap-8 items-start">
-            {/* Profile Image */}
-            <div className="relative group">
-              <img
-                src={user.user.profileImage || "/default-avatar.png"}
-                alt={user.user.username}
-                className="w-40 h-40 rounded-2xl object-cover ring-2 ring-zinc-700"
-              />
-              {user.user.verified && (
-                <Badge className="absolute -top-2 -right-2 bg-green-500">
-                  <CheckCircle className="w-4 h-4 mr-1" />
-                  Verified
-                </Badge>
-              )}
-            </div>
+    <div className="min-h-screen bg-[#0a0a0a] text-white">
+      <div className="max-w-7xl mx-auto px-4 py-8 lg:pl-72 xl:pl-64 pt-24">
+        <motion.div
+          initial="hidden"
+          animate="visible"
+          variants={containerVariants}
+          className="space-y-8"
+        >
+          {/* Profile Header */}
+          <motion.div variants={itemVariants} className="relative group">
+            {/* Banner Gradient */}
+            <div className="absolute inset-0 bg-gradient-to-r from-green-500/10 to-blue-500/10 rounded-3xl blur-3xl -z-10" />
 
-            {/* Profile Info */}
-            <div className="flex-1">
-              <div className="flex items-center gap-4 mb-4">
-                <h1 className="text-3xl font-bold">{user.user.username}</h1>
-                {authUser && authUser._id === userId && (
-                <Button
-                  variant="outline"
-                  className="ml-auto text-black"
-                  onClick={() => setIsEditModalOpen(true)}
+            <div className="bg-[#111] border border-white/5 rounded-3xl p-6 md:p-8 relative overflow-hidden">
+              <div className="flex flex-col md:flex-row gap-6 md:gap-10 items-start md:items-center">
+                {/* Profile Image */}
+                <div className="relative shrink-0">
+                  <div className="w-32 h-32 md:w-40 md:h-40 rounded-full p-1 bg-gradient-to-br from-green-400 to-blue-500">
+                    <img
+                      src={user.user.profileImage || "/default-avatar.png"}
+                      alt={user.user.username}
+                      className="w-full h-full rounded-full object-cover border-4 border-[#111]"
+                    />
+                  </div>
+                  {user.user.verified && (
+                    <div className="absolute bottom-2 right-2 bg-green-500 text-black p-1.5 rounded-full border-4 border-[#111]" title="Verified User">
+                      <CheckCircle className="w-5 h-5" />
+                    </div>
+                  )}
+                </div>
+
+                {/* Profile Info */}
+                <div className="flex-1 min-w-0 w-full">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                    <div>
+                      <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">{user.user.username}</h1>
+                      <div className="flex flex-wrap items-center gap-4 text-zinc-400 text-sm">
+                        <div className="flex items-center gap-1.5">
+                          <Calendar className="w-4 h-4" />
+                          <span>Joined {new Date(user.user.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <MapPin className="w-4 h-4" />
+                          <span>{user.user.college.name || "College not set"}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {authUser && authUser._id === userId && (
+                      <Button
+                        onClick={() => setIsEditModalOpen(true)}
+                        className="bg-white/5 hover:bg-white/10 text-white border border-white/10 rounded-full px-6"
+                      >
+                        <Settings className="w-4 h-4 mr-2" />
+                        Edit Profile
+                      </Button>
+                    )}
+                  </div>
+
+                  {/* Stats Row */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <StatCard
+                      icon={Package}
+                      label="Listings"
+                      value={user.user.listings?.length || 0}
+                    />
+                    <StatCard
+                      icon={Star}
+                      label="Rating"
+                      value={user.user.ratings || "0.0"}
+                    />
+                    {/* Add more stats if available, or fill space */}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Tabs Section */}
+          <motion.div variants={itemVariants}>
+            <Tabs defaultValue="listings" className="w-full">
+              <TabsList className="w-full bg-transparent border-b border-white/10 rounded-none p-0 h-auto justify-start gap-8">
+                <TabsTrigger
+                  value="listings"
+                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-green-500 data-[state=active]:bg-transparent data-[state=active]:text-green-500 px-0 py-3 text-zinc-400 hover:text-white transition-all text-base"
                 >
-                  <Settings className="w-4 h-4 mr-2" />
-                  Edit Profile
-                </Button>
-                )}
-              </div>
+                  Listings
+                </TabsTrigger>
+                <TabsTrigger
+                  value="about"
+                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-green-500 data-[state=active]:bg-transparent data-[state=active]:text-green-500 px-0 py-3 text-zinc-400 hover:text-white transition-all text-base"
+                >
+                  About
+                </TabsTrigger>
+              </TabsList>
 
-              {/* Stats Row */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                <StatCard
-                  icon={Package}
-                  label="Listings"
-                  value={user.user.listings?.length || 0}
-                />
-                <StatCard
-                  icon={Star}
-                  label="Rating"
-                  value={user.user.ratings || 0}
-                />
-                <StatCard
-                  icon={Calendar}
-                  label="Member Since"
-                  value={new Date(user.user.createdAt).toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                  })}
-                />
-                <StatCard
-                  icon={MapPin}
-                  label="College"
-                  value={user.user.college.name || "Not Set"}
-                />
-              </div>
-            </div>
-          </div>
-        </div>
+              <div className="mt-8">
+                <TabsContent value="listings" className="mt-0 outline-none">
+                  {user.user.listings && user.user.listings.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {user.user.listings.map((listing) => (
+                        <ListingCard key={listing._id} listing={listing} />
+                      ))}
+                    </div>
+                  ) : (
+                    <EmptyState message="No listings yet" icon={Package} />
+                  )}
+                </TabsContent>
 
-        {/* Tabs Section */}
-        <Tabs defaultValue="listings" className="w-full">
-          <TabsList className="w-full bg-zinc-800/50 backdrop-blur-sm mb-6">
-            <TabsTrigger value="listings">Listings</TabsTrigger>
-            <TabsTrigger value="about">About</TabsTrigger>
-          </TabsList>
+                <TabsContent value="about" className="mt-0 outline-none">
+                  <div className="bg-[#111] border border-white/5 rounded-2xl p-6 md:p-8 space-y-6">
+                    <div className="space-y-2">
+                      <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                        <Edit3 className="w-5 h-5 text-green-500" />
+                        Bio
+                      </h3>
+                      <p className="text-zinc-400 leading-relaxed">
+                        {user.user.bio || "No bio added yet."}
+                      </p>
+                    </div>
 
-          <TabsContent value="listings">
-            {user.user.listings && user.user.listings.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {user.user.listings.map((listing) => (
-                  <ListingCard key={listing._id} listing={listing} />
-                ))}
-              </div>
-            ) : (
-              <EmptyState message="No listings yet" />
-            )}
-          </TabsContent>
+                    {user.user.link && (
+                      <div className="space-y-2">
+                        <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                          <LinkIcon className="w-5 h-5 text-blue-400" />
+                          Links
+                        </h3>
+                        <a
+                          href={user.user.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-400 hover:text-blue-300 hover:underline inline-flex items-center gap-1"
+                        >
+                          {user.user.link}
+                          <LinkIcon className="w-3 h-3" />
+                        </a>
+                      </div>
+                    )}
 
-          <TabsContent value="about">
-            <div className="bg-zinc-800/50 backdrop-blur-sm rounded-xl p-6">
-              <h2 className="text-xl font-semibold mb-4">About</h2>
-              <div className="space-y-4">
-                {user.user.bio && (
-                  <div>
-                    <h3 className="text-gray-400 text-sm">Bio</h3>
-                    <p className="text-white">{user.user.bio}</p>
+                    <div className="space-y-2">
+                      <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                        <Mail className="w-5 h-5 text-purple-400" />
+                        Contact
+                      </h3>
+                      <p className="text-zinc-400">{user.user.email}</p>
+                    </div>
                   </div>
-                )}
-                {user.user.link && (
-                  <div>
-                    <h3 className="text-gray-400 text-sm">Website</h3>
-                    <a
-                      href={user.user.link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-400 hover:underline"
-                    >
-                      {user.user.link}
-                    </a>
-                  </div>
-                )}
+                </TabsContent>
               </div>
-            </div>
-          </TabsContent>
-        </Tabs>
+            </Tabs>
+          </motion.div>
+        </motion.div>
       </div>
 
       {/* Edit Profile Modal */}
@@ -205,36 +242,43 @@ function UserProfile() {
 
 // Helper Components
 const StatCard = ({ icon: Icon, label, value }) => (
-  <div className="bg-zinc-700/50 rounded-lg p-4">
-    <Icon className="w-5 h-5 text-gray-400 mb-2" />
-    <p className="text-sm text-gray-400">{label}</p>
-    <p className="text-lg font-semibold">{value}</p>
+  <div className="bg-white/5 border border-white/5 rounded-2xl p-4 flex flex-col items-center justify-center text-center hover:bg-white/10 transition-colors">
+    <Icon className="w-6 h-6 text-green-500 mb-2" />
+    <span className="text-2xl font-bold text-white">{value}</span>
+    <span className="text-xs text-zinc-400 uppercase tracking-wider">{label}</span>
   </div>
 );
 
 const ListingCard = ({ listing }) => (
-  <div className="bg-zinc-800/50 backdrop-blur-sm rounded-xl overflow-hidden hover:transform hover:scale-[1.02] transition-all">
-    <div className="relative aspect-video">
+  <motion.div
+    layout
+    initial={{ opacity: 0, scale: 0.95 }}
+    animate={{ opacity: 1, scale: 1 }}
+    className="group bg-[#111] rounded-2xl border border-white/5 overflow-hidden hover:border-green-500/30 transition-all duration-300 hover:shadow-xl hover:shadow-green-900/10"
+  >
+    <div className="relative aspect-[4/3] bg-zinc-900">
       <ImageCarousel images={listing.images} />
+      <div className="absolute top-3 inset-x-3 flex justify-between items-start pointer-events-none">
+        <Badge className="bg-black/60 backdrop-blur-md border border-white/10 text-white pointer-events-auto">
+          {listing.category}
+        </Badge>
+      </div>
     </div>
-    <div className="p-4">
-      <h3 className="font-semibold text-lg mb-2">{listing.title}</h3>
-      <p className="text-gray-400 text-sm line-clamp-2 mb-2">
+
+    <div className="p-5">
+      <div className="flex justify-between items-start mb-2 gap-2">
+        <h3 className="text-lg font-semibold text-white truncate flex-1" title={listing.title}>{listing.title}</h3>
+        <span className="text-lg font-bold text-green-500 whitespace-nowrap">₹ {listing.price}</span>
+      </div>
+      <p className="text-sm text-zinc-400 mb-4 line-clamp-2 min-h-[2.5rem]">
         {listing.description}
       </p>
-      <div className="flex items-center justify-between">
-        <span className="text-green-400 font-semibold">
-          Rs.{listing.price}
-        </span>
-        <Badge variant="secondary">{listing.category}</Badge>
+
+      <div className="pt-4 border-t border-white/5 flex items-center justify-between text-xs text-zinc-500">
+        <span>Posted {new Date(listing.createdAt).toLocaleDateString()}</span>
       </div>
-      <div>{new Date(listing.createdAt).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-      })} </div>
     </div>
-  </div>
+  </motion.div>
 );
 
 const ImageCarousel = ({ images }) => {
@@ -242,8 +286,8 @@ const ImageCarousel = ({ images }) => {
 
   if (!images?.length) {
     return (
-      <div className="w-full h-full bg-zinc-700 flex items-center justify-center">
-        <Package className="w-8 h-8 text-gray-500" />
+      <div className="w-full h-full bg-zinc-900 flex items-center justify-center">
+        <Package className="w-10 h-10 text-zinc-700" />
       </div>
     );
   }
@@ -253,32 +297,46 @@ const ImageCarousel = ({ images }) => {
       <img
         src={images[currentIndex]}
         alt="Listing"
-        className="w-full h-full object-cover"
+        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
       />
+
       {images.length > 1 && (
         <>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+
           <button
-            onClick={() => setCurrentIndex(i => i === 0 ? images.length - 1 : i - 1)}
-            className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+            onClick={(e) => { e.stopPropagation(); setCurrentIndex(i => i === 0 ? images.length - 1 : i - 1); }}
+            className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 p-1.5 rounded-full text-white opacity-0 group-hover:opacity-100 transition-all hover:bg-black/70"
           >
-            <ChevronLeft className="w-5 h-5" />
+            <ChevronLeft className="w-4 h-4" />
           </button>
           <button
-            onClick={() => setCurrentIndex(i => i === images.length - 1 ? 0 : i + 1)}
-            className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+            onClick={(e) => { e.stopPropagation(); setCurrentIndex(i => i === images.length - 1 ? 0 : i + 1); }}
+            className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 p-1.5 rounded-full text-white opacity-0 group-hover:opacity-100 transition-all hover:bg-black/70"
           >
-            <ChevronRight className="w-5 h-5" />
+            <ChevronRight className="w-4 h-4" />
           </button>
+
+          <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex gap-1 relative z-10">
+            {images.map((_, idx) => (
+              <div
+                key={idx}
+                className={`w-1.5 h-1.5 rounded-full transition-all ${idx === currentIndex ? 'bg-white scale-125' : 'bg-white/50'}`}
+              />
+            ))}
+          </div>
         </>
       )}
     </div>
   );
 };
 
-const EmptyState = ({ message }) => (
-  <div className="flex flex-col items-center justify-center py-12 text-gray-400">
-    <Package className="w-12 h-12 mb-4" />
-    <p>{message}</p>
+const EmptyState = ({ message, icon: Icon }) => (
+  <div className="flex flex-col items-center justify-center py-20 text-zinc-500 bg-[#111] rounded-3xl border border-white/5">
+    <div className="w-20 h-20 bg-zinc-900 rounded-full flex items-center justify-center mb-6 ring-1 ring-white/5">
+      <Icon className="w-10 h-10 opacity-50" />
+    </div>
+    <p className="text-lg font-medium text-white">{message}</p>
   </div>
 );
 
@@ -326,7 +384,7 @@ const EditProfileModal = ({ isOpen, onClose, user, onSave, colleges }) => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
-  
+
     try {
       const formDataToSend = new FormData();
       formDataToSend.append('username', formData.username);
@@ -336,18 +394,15 @@ const EditProfileModal = ({ isOpen, onClose, user, onSave, colleges }) => {
       formDataToSend.append('college', formData.college);
       formDataToSend.append('bio', formData.bio);
       formDataToSend.append('link', formData.link);
-      if (formData.profileImage) {
+      if (formData.profileImage instanceof File) {
         formDataToSend.append('profileImage', formData.profileImage);
       }
-  
-      console.log('Submitting form data:', formDataToSend);
-  
+
       const response = await axios.post('/api/users/update', formDataToSend, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
       });
-      console.log('Response:', response.data);
       onSave(response.data.user);
       onClose();
     } catch (err) {
@@ -360,138 +415,151 @@ const EditProfileModal = ({ isOpen, onClose, user, onSave, colleges }) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-zinc-900 text-white border-zinc-700 w-[95vw] max-w-2xl mx-auto p-4 sm:p-6 max-h-[90vh] overflow-y-auto">
-        <DialogHeader className="space-y-3">
-          <DialogTitle className="text-xl sm:text-2xl font-semibold">Edit Profile</DialogTitle>
+      <DialogContent className="bg-[#111] text-white border-white/10 w-[95vw] max-w-2xl mx-auto p-0 overflow-hidden rounded-2xl">
+        <DialogHeader className="p-6 border-b border-white/5 bg-zinc-900/50">
+          <DialogTitle className="text-xl font-semibold">Edit Profile</DialogTitle>
         </DialogHeader>
-        
-        {error && (
-          <div className="bg-red-500/10 border border-red-500 text-red-500 p-2 sm:p-3 rounded-md text-sm">
-            {error}
-          </div>
-        )}
 
-        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-            {/* Profile Image */}
-            <div className="sm:col-span-2 flex flex-col sm:flex-row items-center gap-4">
-              <img 
-                src={imagePreview || '/default-avatar.png'}
-                alt="Profile Preview"
-                className="w-24 h-24 sm:w-32 sm:h-32 rounded-full object-cover"
-              />
-              <div className="w-full">
-                <label className="block text-sm font-medium mb-1">Profile Image(less than 3mb)</label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  className="block w-full text-sm text-gray-400
-                    file:mr-4 file:py-2 file:px-4
-                    file:rounded-full file:border-0
-                    file:text-sm file:font-semibold
-                    file:bg-zinc-700 file:text-white
-                    hover:file:bg-zinc-600"
+        <div className="p-6 max-h-[75vh] overflow-y-auto custom-scrollbar">
+          {error && (
+            <div className="bg-red-500/10 border border-red-500/20 text-red-500 p-3 rounded-xl text-sm mb-6 flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-6">
+              {/* Profile Image */}
+              <div className="flex flex-col sm:flex-row items-center gap-6 p-4 bg-zinc-900/50 rounded-xl border border-white/5">
+                <img
+                  src={imagePreview || '/default-avatar.png'}
+                  alt="Profile Preview"
+                  className="w-24 h-24 rounded-full object-cover ring-2 ring-white/10"
                 />
+                <div className="flex-1 w-full text-center sm:text-left">
+                  <label className="block text-sm font-medium text-zinc-400 mb-2">Profile Image (Max 3MB)</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="block w-full text-sm text-zinc-500
+                            file:mr-4 file:py-2 file:px-4
+                            file:rounded-full file:border-0
+                            file:text-sm file:font-semibold
+                            file:bg-white/10 file:text-white
+                            hover:file:bg-white/20 transition-colors
+                            cursor-pointer"
+                  />
+                </div>
               </div>
-            </div>
 
-            {/* User Details */}
-            <div className="space-y-2">
-              <label className="block text-sm font-medium">Username</label>
-              <input
-                type="text"
-                value={formData.username}
-                onChange={(e) => setFormData({...formData, username: e.target.value})}
-                className="w-full p-2 bg-zinc-800 rounded-md border border-zinc-600 focus:ring-2 focus:ring-green-500"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="block text-sm font-medium">Email</label>
-              <input
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({...formData, email: e.target.value})}
-                className="w-full p-2 bg-zinc-800 rounded-md border border-zinc-600 focus:ring-2 focus:ring-green-500"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="block text-sm font-medium">College</label>
-              <SearchableDropdown
-                colleges={colleges}
-                value={colleges.find(college => college._id === formData.college)}
-                onChange={(college) => setFormData({...formData, college: college ? college._id : ''})}
-              />
-            </div>
-
-            {/* Password Change Section */}
-            <div className="sm:col-span-2 space-y-4 pt-4 border-t border-zinc-700">
-              <h3 className="font-medium text-base sm:text-lg">Change Password</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="block text-sm font-medium">Current Password</label>
+                  <label className="text-sm font-medium text-zinc-400">Username</label>
                   <input
-                    type="password"
-                    value={formData.currentPassword}
-                    onChange={(e) => setFormData({...formData, currentPassword: e.target.value})}
-                    className="w-full p-2 bg-zinc-800 rounded-md border border-zinc-600 focus:ring-2 focus:ring-green-500"
+                    type="text"
+                    value={formData.username}
+                    onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                    className="w-full px-4 py-2.5 bg-zinc-900/50 border border-white/10 rounded-xl focus:outline-none focus:ring-1 focus:ring-green-500/50 focus:border-green-500/50 text-white transition-all"
                   />
                 </div>
+
                 <div className="space-y-2">
-                  <label className="block text-sm font-medium">New Password</label>
+                  <label className="text-sm font-medium text-zinc-400">Email</label>
                   <input
-                    type="password"
-                    value={formData.newPassword}
-                    onChange={(e) => setFormData({...formData, newPassword: e.target.value})}
-                    className="w-full p-2 bg-zinc-800 rounded-md border border-zinc-600 focus:ring-2 focus:ring-green-500"
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    className="w-full px-4 py-2.5 bg-zinc-900/50 border border-white/10 rounded-xl focus:outline-none focus:ring-1 focus:ring-green-500/50 focus:border-green-500/50 text-white transition-all"
+                  />
+                </div>
+
+                <div className="sm:col-span-2 space-y-2">
+                  <label className="text-sm font-medium text-zinc-400">College</label>
+                  <div className="bg-zinc-900/50 border border-white/10 rounded-xl overflow-hidden [&>div]:border-none">
+                    <SearchableDropdown
+                      colleges={colleges}
+                      value={colleges.find(college => college._id === formData.college)}
+                      onChange={(college) => setFormData({ ...formData, college: college ? college._id : '' })}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Password Change Section */}
+              <div className="space-y-4 pt-4 border-t border-white/10">
+                <h3 className="font-medium text-white flex items-center gap-2">
+                  Change Password
+                  <span className="text-xs font-normal text-zinc-500">(Leave blank to keep current)</span>
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-zinc-400">Current Password</label>
+                    <input
+                      type="password"
+                      value={formData.currentPassword}
+                      onChange={(e) => setFormData({ ...formData, currentPassword: e.target.value })}
+                      className="w-full px-4 py-2.5 bg-zinc-900/50 border border-white/10 rounded-xl focus:outline-none focus:ring-1 focus:ring-green-500/50 focus:border-green-500/50 text-white transition-all"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-zinc-400">New Password</label>
+                    <input
+                      type="password"
+                      value={formData.newPassword}
+                      onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
+                      className="w-full px-4 py-2.5 bg-zinc-900/50 border border-white/10 rounded-xl focus:outline-none focus:ring-1 focus:ring-green-500/50 focus:border-green-500/50 text-white transition-all"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-4 pt-4 border-t border-white/10">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-zinc-400">Bio</label>
+                  <textarea
+                    value={formData.bio}
+                    onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
+                    rows={3}
+                    className="w-full px-4 py-2.5 bg-zinc-900/50 border border-white/10 rounded-xl focus:outline-none focus:ring-1 focus:ring-green-500/50 focus:border-green-500/50 text-white transition-all resize-none"
+                    placeholder="Tell us about yourself..."
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-zinc-400">Website Link</label>
+                  <input
+                    type="url"
+                    value={formData.link}
+                    onChange={(e) => setFormData({ ...formData, link: e.target.value })}
+                    className="w-full px-4 py-2.5 bg-zinc-900/50 border border-white/10 rounded-xl focus:outline-none focus:ring-1 focus:ring-green-500/50 focus:border-green-500/50 text-white transition-all"
+                    placeholder="https://..."
                   />
                 </div>
               </div>
             </div>
 
-            {/* Bio & Link */}
-            <div className="sm:col-span-2 space-y-2">
-              <label className="block text-sm font-medium">Bio</label>
-              <textarea
-                value={formData.bio}
-                onChange={(e) => setFormData({...formData, bio: e.target.value})}
-                rows={3}
-                className="w-full p-2 bg-zinc-800 rounded-md border border-zinc-600 focus:ring-2 focus:ring-green-500"
-              />
+            <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-4 border-t border-white/10">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={onClose}
+                disabled={isLoading}
+                className="w-full sm:w-auto hover:bg-white/5 text-zinc-300"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={isLoading}
+                className="w-full sm:w-auto bg-green-500 hover:bg-green-600 text-black"
+              >
+                {isLoading ? 'Saving...' : 'Save Changes'}
+              </Button>
             </div>
-
-            <div className="sm:col-span-2 space-y-2">
-              <label className="block text-sm font-medium">Website Link</label>
-              <input
-                type="url"
-                value={formData.link}
-                onChange={(e) => setFormData({...formData, link: e.target.value})}
-                className="w-full p-2 bg-zinc-800 rounded-md border border-zinc-600 focus:ring-2 focus:ring-green-500"
-              />
-            </div>
-          </div>
-
-          <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-4 pt-4">
-            <Button 
-              type="button" 
-              variant="ghost" 
-              onClick={onClose}
-              disabled={isLoading}
-              className="w-full sm:w-auto"
-            >
-              Cancel
-            </Button>
-            <Button 
-              type="submit"
-              disabled={isLoading}
-              className="w-full sm:w-auto"
-            >
-              {isLoading ? 'Saving...' : 'Save Changes'}
-            </Button>
-          </div>
-        </form>
+          </form>
+        </div>
       </DialogContent>
     </Dialog>
   );

@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MessageSquare, ArrowUp, ArrowLeft, Send, Image, Paperclip } from 'lucide-react';
+import { MessageSquare, ArrowUp, ArrowLeft, Send, Check, X, Star } from 'lucide-react';
 import socket from '../../socket';
 import axios from 'axios';
 import { useNavigate, useParams, Link } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 
-const MessagingPage = ({ }) => {
+const MessagingPage = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const [activeChat, setActiveChat] = useState(null);
@@ -18,13 +19,10 @@ const MessagingPage = ({ }) => {
   const messagesEndRef = useRef(null);
   const [showScrollButton, setShowScrollButton] = useState(false);
   const chatContainerRef = useRef(null);
-  const [showRating, setShowRating] = useState(false);
   const [rating, setRating] = useState(0);
   const [hasRated, setHasRated] = useState(false);
 
-  const [authUserId, setAuthUserId] = useState(() => {
-    return localStorage.getItem('authUserId') || null;
-  });
+  const [authUserId] = useState(() => localStorage.getItem('authUserId') || null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -42,75 +40,43 @@ const MessagingPage = ({ }) => {
     chatContainerRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const StatusMessage = ({ status }) => (
-    <div className="flex justify-center my-4">
-      <span className={`px-4 py-2 rounded-full text-sm ${status === 'accepted' ? 'bg-green-500/20 text-green-500' :
-        status === 'rejected' ? 'bg-red-500/20 text-red-500' :
-          'bg-gray-500/20 text-gray-500'
-        }`}>
-        Sorry! Your Request was {status} by the seller.
-      </span>
-    </div>
-  );
-
   useEffect(() => {
     const fetchRequests = async () => {
       try {
         const { data: receivedData } = await axios.get('/api/chat/received');
         setMessageRequests(receivedData);
-        if (receivedData.length > 0) {
-          setSelectedConversationId(receivedData[0].conversationId);
+        if (receivedData.length > 0 && !id) {
+          // Optional: Auto-select first if needed, but maybe better to wait for user interaction
         }
-        else {
-          setSelectedConversationId(null);
-        }
-        console.log('Received Requests:', receivedData);
 
         const { data: sentData } = await axios.get('/api/chat/sent');
         setSentRequests(sentData);
-        if (sentData.length > 0) {
-          setSelectedConversationId(sentData[0].conversationId);
-        }
-        else {
-          setSelectedConversationId(null);
-        }
-        console.log('Sent Requests:', sentData);
       } catch (error) {
         console.error('Error fetching requests:', error);
       }
     };
 
     fetchRequests();
-  }, []);
+  }, [id]);
 
   const handleRequestClick = async (conversationId) => {
-    if (!conversationId) {
-      console.error('No conversation ID provided');
-      return;
-    }
+    if (!conversationId) return;
+    setSelectedConversationId(conversationId);
 
     try {
-      console.log('Fetching conversation:', conversationId);
-
-      const response = await axios.get(`/api/chat/conversations/${conversationId}`, {
-        withCredentials: true
-      });
-      console.log('Conversation:', response.data);
-
+      const response = await axios.get(`/api/chat/conversations/${conversationId}`, { withCredentials: true });
       if (response.data.success && response.data.conversation) {
         setActiveChat(response.data.conversation);
         setMessages(response.data.conversation.messages || []);
         setParticipants(response.data.conversation.participants || []);
-
-
         socket.emit('joinChat', { conversationId: response.data.conversation._id });
 
-        scrollToBottom();
-      } else {
-        console.error('Invalid conversation data received:', response.data);
+        // Reset rating state for new chat
+        setRating(0); // You might want to fetch actual rating if it exists
+        setHasRated(false); // Same here
       }
     } catch (error) {
-      console.error('Error fetching conversation:', error.response?.data || error);
+      console.error('Error fetching conversation:', error);
     }
   };
 
@@ -118,48 +84,25 @@ const MessagingPage = ({ }) => {
     if (!activeChat) return;
 
     const handleReceiveMessage = (message) => {
-      console.log('Received message:', message);
+      if (!message) return;
 
-      if (!message) {
-        console.error('no message');
-        return;
-      }
-      // Format message with role and sender info
       const formattedMessage = {
         _id: message._id || Date.now(),
         content: message.content,
         senderId: typeof message.senderId === 'object' ? message.senderId._id : message.senderId,
         createdAt: message.createdAt || new Date(),
-        isSender: (typeof message.senderId === 'object' ?
-          message.senderId._id === authUserId :
-          message.senderId === authUserId
-        )
+        type: message.type || 'text'
       };
 
-      setMessages(prevMessages => [...prevMessages, formattedMessage]);
-      scrollToBottom();
+      setMessages(prev => [...prev, formattedMessage]);
     };
 
     socket.on('receiveMessage', handleReceiveMessage);
-
-    return () => {
-      socket.off('receiveMessage', handleReceiveMessage);
-    };
-  }, [activeChat, authUserId]);
-
+    return () => socket.off('receiveMessage', handleReceiveMessage);
+  }, [activeChat]);
 
   const handleSendMessage = async () => {
     if (!messageInput.trim() || !activeChat?._id) return;
-
-    const participantIds = activeChat.participants.map(participant => participant._id.toString());
-
-    // Ensure there are exactly two participants
-    if (participantIds.length !== 2) {
-      console.error('Invalid number of participants:', participantIds);
-      return;
-    }
-
-    const [buyerId, sellerId] = participantIds;
 
     const newMessage = {
       textMessage: messageInput,
@@ -170,48 +113,35 @@ const MessagingPage = ({ }) => {
     try {
       const response = await axios.post(`/api/chat/send`, newMessage);
       if (response.status === 201) {
-        // Optionally, you can optimistically add the message
         socket.emit('sendMessage', {
           conversationId: activeChat._id,
           senderId: authUserId,
           content: messageInput,
         });
         setMessageInput('');
-      } else {
-        console.error('Error sending message:', response);
       }
     } catch (error) {
       console.error('Error sending message:', error);
     }
   };
+
   const handleStatusChange = async (newStatus) => {
     if (!activeChat?._id) return;
-
     try {
       const response = await axios.post('/api/chat/Status', {
         conversationId: activeChat._id,
         status: newStatus
       });
-
       if (response.status === 200) {
-        socket.emit('updateStatus', {
-          roomId: activeChat._id,
-          status: newStatus
-        });
-
-        const statusMessage = {
+        socket.emit('updateStatus', { roomId: activeChat._id, status: newStatus });
+        setActiveChat(prev => ({ ...prev, status: newStatus }));
+        // Optimistically add system message
+        setMessages(prev => [...prev, {
           _id: Date.now(),
           type: 'status',
           content: newStatus,
           createdAt: new Date()
-        };
-        setMessages(prev => [...prev, statusMessage]);
-
-        // Update local state
-        setActiveChat(prev => ({
-          ...prev,
-          status: newStatus
-        }));
+        }]);
       }
     } catch (error) {
       console.error('Error updating status:', error);
@@ -220,22 +150,15 @@ const MessagingPage = ({ }) => {
 
   useEffect(() => {
     if (!activeChat) return;
-
     const handleStatusUpdate = ({ status }) => {
-      setActiveChat(prev => ({
-        ...prev,
-        status
-      }));
-
-      const statusMessage = {
+      setActiveChat(prev => ({ ...prev, status }));
+      setMessages(prev => [...prev, {
         _id: Date.now(),
         type: 'status',
         content: status,
         createdAt: new Date()
-      };
-      setMessages(prev => [...prev, statusMessage]);
+      }]);
     };
-
     socket.on('statusUpdated', handleStatusUpdate);
     return () => socket.off('statusUpdated', handleStatusUpdate);
   }, [activeChat]);
@@ -243,244 +166,258 @@ const MessagingPage = ({ }) => {
   const handleRateUser = async (stars) => {
     try {
       const seller = activeChat.participants.find(p => p.role === "seller");
-
       const response = await axios.post('/api/chat/rate', {
         sellerId: seller._id._id,
         itemId: activeChat.itemId._id,
         rating: stars
-      }, {
-        withCredentials: true,
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
+      }, { withCredentials: true });
 
       if (response.status === 200) {
         setRating(stars);
         setHasRated(true);
-
-        socket.emit('sellerRated', {
-          conversationId: activeChat._id,
-          rating: stars
-        });
+        socket.emit('sellerRated', { conversationId: activeChat._id, rating: stars });
       }
     } catch (error) {
       console.error('Error rating user:', error);
     }
   };
 
+  const otherParticipant = participants.find(p => p._id._id !== authUserId)?._id;
+  const isBuyer = activeChat?.participants.find(p => p._id._id === authUserId)?.role === 'buyer';
+  const isSeller = activeChat?.participants.find(p => p._id._id === authUserId)?.role === 'seller';
+
   return (
-    <div className="min-h-screen bg-zinc-900 lg:pl-64 pt-16">
-      {/* Left Panel */}
-      <div className={`w-full md:w-80 bg-zinc-900 border-r border-gray-800 ${activeChat ? 'hidden md:block' : 'block'
-        }`}>
-        {/* Header with Tabs */}
-        <div className="p-4 border-b border-gray-800">
-          <div className="flex space-x-2 mb-4">
-            <button
-              onClick={() => setActiveTab('received')}
-              className={`flex-1 py-2 px-4 rounded-lg transition-colors ${activeTab === 'received' ? 'bg-green-500 text-white' : 'bg-zinc-800 text-gray-400'
-                }`}
-            >
-              Received
-            </button>
-            <button
-              onClick={() => setActiveTab('sent')}
-              className={`flex-1 py-2 px-4 rounded-lg transition-colors ${activeTab === 'sent' ? 'bg-green-500 text-white' : 'bg-zinc-800 text-gray-400'
-                }`}
-            >
-              Sent
-            </button>
+    <div className="flex h-screen bg-[#0a0a0a] lg:pl-64 pt-20 overflow-hidden">
+      {/* Messages List Sidebar */}
+      <div className={`w-full md:w-80 lg:w-96 bg-[#111] border-r border-white/5 flex flex-col ${activeChat ? 'hidden md:flex' : 'flex'}`}>
+
+        {/* Header Tabs */}
+        <div className="p-4 border-b border-white/5 bg-[#111]/95 backdrop-blur z-10">
+          <h2 className="text-xl font-bold text-white mb-4 px-2">Messages</h2>
+          <div className="flex p-1 bg-zinc-900 rounded-xl border border-white/5">
+            {['received', 'sent'].map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all capitalize ${activeTab === tab
+                    ? 'bg-zinc-800 text-white shadow-sm ring-1 ring-white/10'
+                    : 'text-zinc-500 hover:text-zinc-300'
+                  }`}
+              >
+                {tab}
+              </button>
+            ))}
           </div>
         </div>
 
-        {/* Message Requests */}
-        <div className="overflow-y-auto h-[calc(100vh-12rem)]">
-          {(activeTab === 'received' ? messageRequests : sentRequests).map((request) => (
-            <div
-              key={request._id}
-              onClick={() => handleRequestClick(request._id)}
-              className="cursor-pointer p-4 hover:bg-zinc-800 border-b border-gray-800"
+        {/* Conversation List */}
+        <div className="flex-1 overflow-y-auto custom-scrollbar">
+          <AnimatePresence mode='wait'>
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 10 }}
+              className="divide-y divide-white/5"
             >
-              <div className="flex items-center space-x-3">
-                <img
-                  src={request.avatar || "/api/placeholder/40/40"}
-                  alt={request.user || "User"}
-                  className="w-10 h-10 rounded-full"
-                />
-                <div className="flex-1 min-w-0">
-                  <h4 className="text-sm font-medium text-gray-400">
-                    {request.user || "Unknown User"}
-                  </h4>
-                  <p className="text-xs text-green-500">
-                    Item: {request.itemTitle}
-                  </p>
-                  <p className="text-sm text-gray-500 truncate">
-                    {request.message || "No messages yet"}
-                  </p>
-                </div>
+              {(activeTab === 'received' ? messageRequests : sentRequests).map((request) => (
                 <div
-                  className={`flex flex-col items-end p-1 rounded-lg ${request.status !== 'rejected' ? 'bg-green-700' : 'bg-red-700'
-                    }`}
+                  key={request._id}
+                  onClick={() => handleRequestClick(request.conversationId || request._id)}
+                  className={`p-4 cursor-pointer hover:bg-white/5 transition-colors ${selectedConversationId === (request.conversationId || request._id) ? 'bg-white/5' : ''}`}
                 >
-                  <span className="text-sm">{request.status}</span>
+                  <div className="flex items-start gap-3">
+                    <img
+                      src={request.avatar || "/default-avatar.png"}
+                      alt="user"
+                      className="w-10 h-10 rounded-full object-cover border border-white/10"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-start mb-0.5">
+                        <h4 className="font-medium text-white truncate">{request.user || "Unknown"}</h4>
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded-full uppercase tracking-wider font-bold ${request.status === 'accepted' ? 'bg-green-500/20 text-green-400' :
+                            request.status === 'rejected' ? 'bg-red-500/20 text-red-400' :
+                              'bg-zinc-500/20 text-zinc-400'
+                          }`}>
+                          {request.status}
+                        </span>
+                      </div>
+                      <p className="text-xs text-green-500 font-medium mb-1 truncate">{request.itemTitle}</p>
+                      <p className="text-sm text-zinc-500 truncate">{request.message || "Start the conversation..."}</p>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          ))}
+              ))}
+              {(activeTab === 'received' ? messageRequests : sentRequests).length === 0 && (
+                <div className="p-8 text-center text-zinc-500">
+                  No {activeTab} messages yet.
+                </div>
+              )}
+            </motion.div>
+          </AnimatePresence>
         </div>
       </div>
 
-      {/* Right Section - Chat Area */}
-      <div className={`flex-1 flex flex-col bg-zinc-900 ${activeChat ? 'flex' : 'hidden sm:flex'}`}>
+      {/* Chat Area */}
+      <div className={`flex-1 flex flex-col bg-[#0a0a0a] relative ${activeChat ? 'flex' : 'hidden md:flex'}`}>
         {!activeChat ? (
-          // Default View
-          <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
-            <div className="w-16 h-16 bg-zinc-800 rounded-full flex items-center justify-center mb-4">
-              <MessageSquare className="w-8 h-8 text-gray-400" />
+          <div className="flex-1 flex flex-col items-center justify-center text-zinc-500 p-8">
+            <div className="w-20 h-20 bg-zinc-900 rounded-full flex items-center justify-center mb-6 ring-1 ring-white/5">
+              <MessageSquare className="w-8 h-8 opacity-50" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-300 mb-2">Your Messages</h3>
-            <p className="text-gray-500 max-w-sm">
-              Select a conversation from the left to start messaging
-            </p>
+            <p>Select a conversation to start chatting</p>
           </div>
         ) : (
           <>
             {/* Chat Header */}
-            <div className="p-4 border-b border-gray-800 flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <button onClick={() => navigate(-1)} className="sm:hidden p-2 hover:bg-zinc-800 rounded-lg">
-                  <ArrowLeft className="w-5 h-5 text-gray-400" />
+            <div className="h-20 border-b border-white/5 bg-[#111]/80 backdrop-blur-md flex items-center justify-between px-6 sticky top-0 z-20">
+              <div className="flex items-center gap-4">
+                <button onClick={() => { setActiveChat(null); setSelectedConversationId(null); }} className="md:hidden p-2 -ml-2 text-zinc-400 hover:text-white">
+                  <ArrowLeft className="w-5 h-5" />
                 </button>
-                <Link
-                  to={`/profile/${participants.find(p => p._id._id !== authUserId)?._id.username}`}
-                  className="flex items-center space-x-3 hover:bg-zinc-800 p-2 rounded-lg transition-colors"
-                >
-                  <img
-                    src={participants.find(p => p._id._id !== authUserId)?._id.profileImage || "/api/placeholder/40/40"}
-                    alt={participants.find(p => p._id._id !== authUserId)?._id.username || "Contact"}
-                    className="w-10 h-10 rounded-full object-cover"
-                  />
-                  <h2 className="text-lg font-semibold text-gray-300">
-                    {participants.find(p => p._id._id !== authUserId)?._id.username || 'Unknown'}
-                  </h2>
-                </Link>
-                <p className="text-sm text-green-500">
-                  {activeChat?.itemId?.title}
-                </p>
-              </div>
-            </div>
 
-            {/* Item Preview Section */}
-            <div className="p-4 border-b border-gray-800 bg-zinc-800/50">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
+                <div className="flex items-center gap-3">
                   <img
-                    src={activeChat?.itemId?.images[0] || "/placeholder-item.png"}
-                    alt={activeChat?.itemId?.title}
-                    className="w-16 h-16 object-cover rounded-lg"
+                    src={otherParticipant?.profileImage || "/default-avatar.png"}
+                    alt="User"
+                    className="w-10 h-10 rounded-full object-cover border border-white/10"
                   />
                   <div>
-                    <h3 className="text-lg font-medium text-white">
-                      {activeChat?.itemId?.title}
-                    </h3>
-                    <span className={`text-sm ${activeChat?.status === 'accepted' ? 'text-green-500' :
-                      activeChat?.status === 'rejected' ? 'text-red-500' :
-                        'text-gray-500'
-                      }`}>
-                      Status: {activeChat?.status || 'pending'}
-                    </span>
+                    <Link to={`/profile/${otherParticipant?.username}`} className="font-semibold text-white hover:underline decoration-green-500 underline-offset-4">
+                      {otherParticipant?.username || "Unknown User"}
+                    </Link>
+                    <div className="text-xs text-zinc-500 flex items-center gap-2">
+                      {activeChat.itemId?.title && (
+                        <span className="text-green-500 font-medium bg-green-500/10 px-2 py-0.5 rounded-full">
+                          For: {activeChat.itemId.title}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
-                {activeChat?.status === 'accepted' &&
-                  activeChat.participants.find(p => p._id._id === authUserId)?.role === 'buyer' &&
-                  !hasRated && (
-                    <div className="mt-4 p-4 bg-zinc-800/50 rounded-lg">
-                      <p className="text-sm text-gray-300 mb-2">Rate your experience with the seller</p>
-                      <div className="flex space-x-2">
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <button
-                            key={star}
-                            onClick={() => handleRateUser(star)}
-                            className={`text-2xl focus:outline-none ${rating >= star ? 'text-yellow-400' : 'text-gray-500'
-                              }`}
-                          >
-                            ★
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+              </div>
 
-                {hasRated && (
-                  <div className="mt-2 text-sm text-green-500">
-                    Thanks for rating!
+              {/* Header Actions */}
+              <div className="flex items-center gap-4">
+                {/* Item Preview */}
+                {activeChat.itemId?.images?.[0] && (
+                  <div className="w-10 h-10 rounded-lg overflow-hidden border border-white/10 hidden sm:block">
+                    <img src={activeChat.itemId.images[0]} alt="Item" className="w-full h-full object-cover" />
                   </div>
                 )}
-                {activeChat?.participants.find(p => p._id._id === authUserId)?.role === 'seller' &&
-                  activeChat?.status === 'pending' && (
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={() => handleStatusChange('rejected')}
-                        className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl transition-colors"
-                      >
-                        Reject
-                      </button>
-                      <button
-                        onClick={() => handleStatusChange('accepted')}
-                        className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl transition-colors"
-                      >
-                        Accept
-                      </button>
-                    </div>
-                  )}
+
+                {/* Status Actions */}
+                {isSeller && activeChat.status === 'pending' && (
+                  <div className="flex items-center bg-zinc-900 rounded-lg p-1 border border-white/5">
+                    <button onClick={() => handleStatusChange('rejected')} className="p-2 hover:bg-red-500/20 text-red-500 rounded-md transition-colors" title="Reject">
+                      <X className="w-4 h-4" />
+                    </button>
+                    <div className="w-px h-4 bg-white/10 mx-1"></div>
+                    <button onClick={() => handleStatusChange('accepted')} className="p-2 hover:bg-green-500/20 text-green-500 rounded-md transition-colors" title="Accept">
+                      <Check className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* Chat Messages */}
-            <div ref={chatContainerRef} onScroll={handleScroll} className="flex-1 overflow-y-auto p-4 space-y-4">
-              {showScrollButton && (
-                <button
-                  onClick={scrollToTop}
-                  className="fixed bottom-20 right-8 p-2 bg-green-500 hover:bg-green-600 
-                        text-white rounded-full shadow-lg transition-all duration-200"
+            {/* Status Banner */}
+            {activeChat.status !== 'pending' && (
+              <div className={`text-xs text-center py-1 font-medium tracking-wide uppercase ${activeChat.status === 'accepted' ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'
+                }`}>
+                This request has been {activeChat.status}
+              </div>
+            )}
+
+            {/* Messages */}
+            <div
+              ref={chatContainerRef}
+              onScroll={handleScroll}
+              className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 custom-scrollbar bg-[#0a0a0a]"
+            >
+              {messages.map((message, idx) => (
+                <motion.div
+                  key={message._id || idx}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className={`flex ${message.content === 'accepted' || message.content === 'rejected' ? 'justify-center' : message.senderId === authUserId ? 'justify-end' : 'justify-start'}`}
                 >
-                  <ArrowUp className="w-5 h-5" />
-                </button>
-              )}
-              {messages.map((message) => (
-                <div
-                  key={message._id}
-                  className={`flex ${message.senderId === authUserId ? 'justify-end' : 'justify-start'}`}
-                >
-                  <div
-                    className={`max-w-[70%] px-4 py-2 rounded-lg ${message.senderId === authUserId
-                      ? 'bg-green-600 text-white'
-                      : 'bg-gray-300 text-gray-900'
-                      }`}
-                  >
-                    <p>{message.content}</p>
-                    <span className={`text-xs ${message.senderId === authUserId
-                      ? 'text-zinc-200'
-                      : 'text-gray-500'
-                      }`}>
-                      {new Date(message.createdAt).toLocaleTimeString()}
+                  {message.type === 'status' || message.content === 'accepted' || message.content === 'rejected' ? (
+                    <span className="text-xs text-zinc-500 bg-zinc-900 px-3 py-1 rounded-full border border-white/5">
+                      Status updated to {message.content}
                     </span>
-                  </div>
-                </div>
+                  ) : (
+                    <div className={`max-w-[75%] md:max-w-[60%] space-y-1 ${message.senderId === authUserId ? 'items-end flex flex-col' : 'items-start flex flex-col'}`}>
+                      <div className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${message.senderId === authUserId
+                          ? 'bg-green-600 text-white rounded-tr-none shadow-lg shadow-green-900/20'
+                          : 'bg-zinc-800 text-zinc-200 rounded-tl-none border border-white/5'
+                        }`}>
+                        {message.content}
+                      </div>
+                      <span className="text-[10px] text-zinc-600 px-1">
+                        {new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
+                  )}
+                </motion.div>
               ))}
+
+              {/* Rating Prompt for Buyer */}
+              {activeChat.status === 'accepted' && isBuyer && !hasRated && (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-center my-6">
+                  <div className="bg-[#111] border border-white/10 p-6 rounded-2xl text-center space-y-3 shadow-xl">
+                    <p className="text-zinc-300 font-medium">Rate your experience</p>
+                    <div className="flex gap-2 justify-center">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <button
+                          key={star}
+                          onClick={() => handleRateUser(star)}
+                          className={`transition-transform hover:scale-110 ${rating >= star ? 'fill-yellow-400 text-yellow-400' : 'text-zinc-600'}`}
+                        >
+                          <Star className={`w-8 h-8 ${rating >= star ? 'fill-yellow-400 text-yellow-500' : 'stroke-current'}`} />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Message Input */}
-            <div className="p-4 border-t border-gray-800">
-              <div className="p-4 border-t border-gray-800">
-                <div className="flex items-center space-x-2">
-                  <input type="text" placeholder="Type a message..." value={messageInput} onChange={(e) => setMessageInput(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()} className="flex-1 py-2 px-4 border border-gray-800 rounded-full focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent" />
-                  <button onClick={handleSendMessage} className="p-2 bg-green-500 hover:bg-green-700 rounded-full">
-                    <Send className="w-5 h-5 text-white" />
-                  </button>
-                </div>
+            {/* Scroll to Bottom Button */}
+            <AnimatePresence>
+              {showScrollButton && (
+                <motion.button
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  onClick={scrollToTop}
+                  className="absolute bottom-24 right-8 p-3 bg-zinc-800/80 text-white rounded-full shadow-lg backdrop-blur hover:bg-zinc-700 transition-colors z-10 border border-white/10"
+                >
+                  <ArrowUp className="w-5 h-5" />
+                </motion.button>
+              )}
+            </AnimatePresence>
+
+            {/* Input Area */}
+            <div className="p-4 bg-[#0a0a0a] border-t border-white/5 pb-8 sm:pb-8">
+              <div className="max-w-4xl mx-auto relative flex items-center gap-2">
+                <input
+                  type="text"
+                  value={messageInput}
+                  onChange={(e) => setMessageInput(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                  placeholder="Type a message..."
+                  className="flex-1 bg-zinc-900/50 text-white placeholder-zinc-500 border border-white/10 rounded-full px-6 py-3.5 focus:outline-none focus:ring-1 focus:ring-green-500/50 focus:border-green-500/50 transition-all hover:bg-zinc-900"
+                />
+                <button
+                  onClick={handleSendMessage}
+                  disabled={!messageInput.trim()}
+                  className="p-3.5 bg-green-500 hover:bg-green-400 disabled:opacity-50 disabled:hover:bg-green-500 text-black rounded-full transition-all shadow-lg shadow-green-900/20 active:scale-95"
+                >
+                  <Send className="w-5 h-5 ml-0.5" />
+                </button>
               </div>
             </div>
           </>

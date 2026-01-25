@@ -11,11 +11,12 @@ import {
   X,
   Upload,
   Plus,
-  Package
+  Package,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-
-
+import { motion, AnimatePresence } from 'framer-motion';
 
 const UserListingsPage = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -40,12 +41,7 @@ const UserListingsPage = () => {
   const [existingImages, setExistingImages] = useState([]);
   const queryClient = useQueryClient();
 
-  const [isSidebarOpen, setSidebarOpen] = useState(false);
-  const [selectedButton, setSelectedButton] = useState("Your Listings");
-
-  const toggleSidebar = () => {
-    setSidebarOpen(!isSidebarOpen);
-  };
+  // const [isSidebarOpen, setSidebarOpen] = useState(false); // Unused
 
   const { data: user } = useQuery({
     queryKey: ['authUser'],
@@ -65,10 +61,10 @@ const UserListingsPage = () => {
     }
   });
 
-  const userId = user?._id; // Use the fetched user ID to fetch listings
+  const userId = user?._id;
   const userCollege = user?.college;
   const { data: listings } = useQuery({
-    queryKey: ['listings', userId], // Include userId in the query key for cache invalidation
+    queryKey: ['listings', userId],
     queryFn: async () => {
       try {
         if (!userId) {
@@ -86,14 +82,12 @@ const UserListingsPage = () => {
         return [];
       }
     },
-    enabled: !!userId, // Ensure query runs only if userId is available
+    enabled: !!userId,
   });
 
   const handleCreateListing = async (e) => {
     e.preventDefault();
     setLoading(true);
-    console.log('createForm:', createForm);
-    console.log('userCollege:', userCollege);
     try {
       const formdata = new FormData();
       formdata.append('title', createForm.title);
@@ -106,16 +100,13 @@ const UserListingsPage = () => {
           formdata.append('images', createForm.images[i]);
         }
       }
-      console.log('FormData entries:');
-      for (let pair of formdata.entries()) {
-        console.log(pair[0], pair[1]);
-      }
+
       const res = await fetch('/api/items', {
         method: 'POST',
         body: formdata,
       });
       const data = await res.json();
-      console.log(data);
+
       if (!res.ok) {
         throw new Error(data.error || 'Something went wrong');
       }
@@ -138,13 +129,10 @@ const UserListingsPage = () => {
   const handleEditListing = async (e) => {
     e.preventDefault();
     setLoading(true);
-    console.log('handleEditListing triggered');
     if (!selectedListing || !selectedListing._id) {
       console.error('No listing selected for editing');
       return;
     }
-    console.log('editForm:', editForm);
-    console.log('selectedListing ID:', selectedListing._id);
     try {
       const formdata = new FormData();
       formdata.append('title', editForm.title);
@@ -152,7 +140,6 @@ const UserListingsPage = () => {
       formdata.append('price', editForm.price);
       formdata.append('category', editForm.category);
       formdata.append('collegeId', userCollege);
-      // Append existing images
       formdata.append('existingImages', JSON.stringify(existingImages));
 
       if (editForm.newImages && editForm.newImages.length > 0) {
@@ -160,19 +147,16 @@ const UserListingsPage = () => {
           formdata.append('images', editForm.newImages[i]);
         }
       }
-      for (let pair of formdata.entries()) {
-        console.log(pair[0], pair[1]);
-      }
+
       const res = await fetch(`/api/items/${selectedListing._id}`, {
         method: 'PUT',
         body: formdata,
       });
       const data = await res.json();
-      console.log(data);
+
       if (!res.ok) {
         throw new Error(data.error || 'Something went wrong');
       }
-      console.log('Edit successful', data);
 
       setIsEditModalOpen(false);
       setEditForm({
@@ -194,7 +178,6 @@ const UserListingsPage = () => {
 
   const handleDeleteListing = async () => {
     if (!selectedListing || !selectedListing._id) {
-      console.error('No listing selected for deletion');
       return;
     }
     setLoading(true);
@@ -204,7 +187,7 @@ const UserListingsPage = () => {
       });
 
       if (response.ok) {
-        setIsDeleteModalOpen(false); // Close the modal
+        setIsDeleteModalOpen(false);
         queryClient.invalidateQueries('listings');
       } else {
         console.error('Failed to delete the listing');
@@ -293,7 +276,6 @@ const UserListingsPage = () => {
 
   const handleEdit = (listing) => {
     setSelectedListing(listing);
-    console.log('Editing listing:', listing);
     setEditForm({
       title: listing.title,
       description: listing.description,
@@ -312,380 +294,429 @@ const UserListingsPage = () => {
 
   const categories = ["Books", "Electronics", "Furniture", "Appliances", "Clothing", "Sports"];
 
+  const modalVariants = {
+    hidden: { opacity: 0, scale: 0.95 },
+    visible: { opacity: 1, scale: 1 },
+    exit: { opacity: 0, scale: 0.95 }
+  };
+
+  const overlayVariants = {
+    hidden: { opacity: 0 },
+    visible: { opacity: 1 },
+    exit: { opacity: 0 }
+  };
+
   return (
-    <div className="min-h-screen bg-zinc-900 flex">
+    <div className="min-h-screen bg-[#0a0a0a] flex">
       <div className="flex-1 overflow-auto lg:pl-64 mt-16">
-        <div className="md:p-8 p-6">
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl font-bold text-gray-200">Your Listed items</h1>
-            <button onClick={() => handleCreate()} className="flex items-center md:space-x-2 px-2 md:px-4 py-2 bg-green-500 text-black rounded-lg hover:bg-green-600 transition-colors">
-              <Plus className="w-5 h-5" />
+        <div className="md:p-8 p-6 max-w-7xl mx-auto">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+            <div>
+              <h1 className="text-3xl font-bold text-white mb-2">Your Listings</h1>
+              <p className="text-zinc-400">Manage your items for sale</p>
+            </div>
+            <button
+              onClick={() => handleCreate()}
+              className="flex items-center gap-2 px-5 py-2.5 bg-green-500 hover:bg-green-400 text-black font-medium rounded-full transition-all shadow-lg shadow-green-900/20 active:scale-95 group"
+            >
+              <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform" />
               <span>New Listing</span>
             </button>
           </div>
-          {(!listings || listings.length === 0) ? (
-              <div className="flex flex-col items-center justify-center py-12 text-gray-400">
-                <Package className="w-12 h-12 mb-4" />
-                <p>No Listings</p>
-              </div>
-          ) : (
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {listings.map((listing) => (
-              <div key={listing._id || listing.id} className="bg-zinc-800 rounded-lg shadow-sm overflow-hidden">
-                <div className="relative">
-                  <ImageSlider images={listing.images} />
-                </div>
-                <div className="p-4">
-                  <div className="flex justify-between items-start mb-1">
-                    <h3 className="text-lg font-semibold text-gray-100">{listing.title}</h3>
-                    <span className="text-lg font-bold text-green-600">Rs.{listing.price}</span>
-                  </div>
-                  <p className="text-sm text-gray-400 mb-4">{listing.description}</p>
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    <span className="px-2 py-1 bg-gray-200 text-sm rounded-full text-gray-800">
+          {(!listings || listings.length === 0) ? (
+            <div className="flex flex-col items-center justify-center py-20 text-zinc-500 bg-[#111] rounded-3xl border border-white/5">
+              <div className="w-20 h-20 bg-zinc-900 rounded-full flex items-center justify-center mb-6 ring-1 ring-white/5">
+                <Package className="w-10 h-10 opacity-50" />
+              </div>
+              <h3 className="text-xl font-semibold text-white mb-2">No active listings</h3>
+              <p>Start selling by creating your first listing!</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {listings.map((listing) => (
+                <div key={listing._id || listing.id} className="group bg-[#111] rounded-2xl border border-white/5 overflow-hidden hover:border-green-500/30 transition-all duration-300 hover:shadow-xl hover:shadow-green-900/10">
+                  <div className="relative aspect-[4/3] bg-zinc-900">
+                    <ImageSlider images={listing.images} />
+                    <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full text-xs font-medium text-white border border-white/10">
                       {listing.category}
-                    </span>
+                    </div>
                   </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-300">
-                      Posted on {new Date(listing.createdAt).toLocaleDateString()}
-                    </span>
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={() => handleEdit(listing)}
-                        className="p-2 text-gray-600 hover:bg-gray-900 rounded-lg transition-colors"
-                      >
-                        <Edit className="w-5 h-5 text-green-500" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(listing)}
-                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                      >
-                        <Trash2 className="w-5 h-5" />
-                      </button>
+                  <div className="p-5">
+                    <div className="flex justify-between items-start mb-2 gap-2">
+                      <h3 className="text-lg font-semibold text-white truncate flex-1" title={listing.title}>{listing.title}</h3>
+                      <span className="text-lg font-bold text-green-500 whitespace-nowrap">₹ {listing.price}</span>
+                    </div>
+                    <p className="text-sm text-zinc-400 mb-4 line-clamp-2 min-h-[2.5rem]">{listing.description}</p>
+
+                    <div className="flex items-center justify-between pt-4 border-t border-white/5">
+                      <span className="text-xs text-zinc-500">
+                        {new Date(listing.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                      </span>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleEdit(listing)}
+                          className="p-2 text-zinc-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                          title="Edit"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(listing)}
+                          className="p-2 text-zinc-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                          title="Delete"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>)}
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
-      {isCreateModalOpen && (
-        <div className="fixed inset-0 bg-zinc-900 bg-opacity-50 flex items-center justify-center p-4 z-20">
-          <div className="bg-zinc-900 rounded-lg max-w-md w-full">
-            <div className="flex justify-between items-center p-4 border-b">
-              <h2 className="text-lg font-semibold">Create Listing</h2>
-              <button
-                onClick={() => setIsCreateModalOpen(false)}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="p-4 max-h-[70vh] overflow-y-auto">
-              <form
-                onSubmit={handleCreateListing}
-                className="space-y-4"
-              >
-                <div>
-                  <label htmlFor='Title' className="block text-sm font-medium text-gray-300 mb-1">Title</label>
-                  <input
-                    type="text"
-                    value={createForm.title || ""}
-                    onChange={(e) => setCreateForm({ ...createForm, title: e.target.value })}
-                    className="w-full px-3 py-2 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-zinc-800"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">Description</label>
-                  <textarea
-                    value={createForm.description || ""}
-                    onChange={(e) => setCreateForm({ ...createForm, description: e.target.value })}
-                    rows={3}
-                    className="resize-none w-full px-3 py-2 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-zinc-800"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">Price (Rupees)</label>
-                  <input
-                    type="number"
-                    value={createForm.price || ""}
-                    onChange={(e) => setCreateForm({ ...createForm, price: e.target.value })}
-                    className="w-full px-3 py-2 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-zinc-800"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">Category</label>
-                  <select
-                    value={createForm.category || ""}
-                    onChange={(e) => setCreateForm({ ...createForm, category: e.target.value })}
-                    className="w-full px-3 py-2 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-zinc-800"
-                    required
-                  >
-                    <option value="" disabled>Select Category</option>
-                    {categories.map((category) => (
-                      <option key={category} value={category}>{category}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">Images</label>
-                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+      <AnimatePresence>
+        {isCreateModalOpen && (
+          <motion.div
+            initial="hidden" animate="visible" exit="hidden" variants={overlayVariants}
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+          >
+            <motion.div
+              variants={modalVariants}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-[#111] border border-white/10 rounded-2xl max-w-lg w-full shadow-2xl overflow-hidden"
+            >
+              <div className="flex justify-between items-center p-6 border-b border-white/10 bg-white/5">
+                <h2 className="text-xl font-bold text-white">Create New Listing</h2>
+                <button onClick={() => setIsCreateModalOpen(false)} className="text-zinc-400 hover:text-white transition-colors">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="p-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
+                <form onSubmit={handleCreateListing} className="space-y-5">
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-medium text-zinc-300">Title</label>
                     <input
-                      type="file"
-                      accept="image/*"
-                      multiple
-                      onChange={(e) => {
-                        const files = Array.from(e.target.files); // Convert FileList to Array
-                        setCreateForm({
-                          ...createForm,
-                          images: [...createForm.images, ...files],
-                        });
-                      }}
-                      className="hidden"
-                      id="images"
+                      type="text"
+                      value={createForm.title || ""}
+                      onChange={(e) => setCreateForm({ ...createForm, title: e.target.value })}
+                      className="w-full px-4 py-2.5 bg-zinc-900/50 border border-white/10 rounded-xl focus:outline-none focus:ring-1 focus:ring-green-500/50 focus:border-green-500/50 text-white placeholder-zinc-600 transition-all"
+                      placeholder="e.g., Engineering Mathematics Textbook"
+                      required
                     />
-                    <label htmlFor="images" className="cursor-pointer">
-                      <Upload className="w-6 h-6 text-gray-400 mx-auto mb-2" />
-                      <p className="text-sm text-gray-500">Click to upload or drag and drop</p>
-                    </label>
                   </div>
 
-                  {/* Image Preview Section */}
-                  {createForm.images && createForm.images.length > 0 && (
-                    <div className="mt-4 overflow-x-auto">
-                      <div className="flex space-x-2">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-sm font-medium text-zinc-300">Price (₹)</label>
+                      <input
+                        type="number"
+                        value={createForm.price || ""}
+                        onChange={(e) => setCreateForm({ ...createForm, price: e.target.value })}
+                        className="w-full px-4 py-2.5 bg-zinc-900/50 border border-white/10 rounded-xl focus:outline-none focus:ring-1 focus:ring-green-500/50 focus:border-green-500/50 text-white placeholder-zinc-600 transition-all"
+                        placeholder="0.00"
+                        required
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-sm font-medium text-zinc-300">Category</label>
+                      <select
+                        value={createForm.category || ""}
+                        onChange={(e) => setCreateForm({ ...createForm, category: e.target.value })}
+                        className="w-full px-4 py-2.5 bg-zinc-900/50 border border-white/10 rounded-xl focus:outline-none focus:ring-1 focus:ring-green-500/50 focus:border-green-500/50 text-white transition-all appearance-none"
+                        required
+                      >
+                        <option value="" disabled className='bg-zinc-900'>Select Category</option>
+                        {categories.map((category) => (
+                          <option key={category} value={category} className='bg-zinc-900'>{category}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-medium text-zinc-300">Description</label>
+                    <textarea
+                      value={createForm.description || ""}
+                      onChange={(e) => setCreateForm({ ...createForm, description: e.target.value })}
+                      rows={4}
+                      className="w-full px-4 py-2.5 bg-zinc-900/50 border border-white/10 rounded-xl focus:outline-none focus:ring-1 focus:ring-green-500/50 focus:border-green-500/50 text-white placeholder-zinc-600 resize-none transition-all"
+                      placeholder="Describe the condition, features, etc..."
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-medium text-zinc-300">Images</label>
+                    <div className="border-2 border-dashed border-white/10 rounded-xl p-8 text-center hover:border-green-500/30 transition-colors bg-white/[0.02]">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        onChange={(e) => {
+                          const files = Array.from(e.target.files);
+                          setCreateForm({
+                            ...createForm,
+                            images: [...createForm.images, ...files],
+                          });
+                        }}
+                        className="hidden"
+                        id="createImages"
+                      />
+                      <label htmlFor="createImages" className="cursor-pointer flex flex-col items-center gap-2">
+                        <div className="p-3 bg-zinc-900 rounded-full">
+                          <Upload className="w-6 h-6 text-green-500" />
+                        </div>
+                        <p className="text-sm text-zinc-400 font-medium">Click to upload or drag & drop</p>
+                        <p className="text-xs text-zinc-600">JPG, PNG up to 5MB</p>
+                      </label>
+                    </div>
+
+                    {createForm.images && createForm.images.length > 0 && (
+                      <div className="mt-4 grid grid-cols-4 gap-2">
                         {Array.from(createForm.images).map((file, index) => (
-                          <div key={index} className="relative w-24 h-24 border rounded overflow-hidden flex-shrink-0">
+                          <div key={index} className="relative aspect-square border border-white/10 rounded-lg overflow-hidden group">
                             <img
-                              src={URL.createObjectURL(file)} // Create temporary URL for preview
+                              src={URL.createObjectURL(file)}
                               alt={`Preview ${index + 1}`}
                               className="w-full h-full object-cover"
                             />
                             <button
                               type="button"
-                              className="absolute top-1 right-1 bg-red-600 p-1 text-white rounded-lg"
+                              className="absolute top-1 right-1 bg-black/60 hover:bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-all backdrop-blur-md"
                               onClick={() => {
-                                // Remove selected image
                                 const updatedImages = Array.from(createForm.images).filter((_, i) => i !== index);
                                 setCreateForm({ ...createForm, images: updatedImages });
                               }}
                             >
-                              &times;
+                              <X className="w-3 h-3" />
                             </button>
                           </div>
                         ))}
                       </div>
+                    )}
+                  </div>
+
+                  <div className="pt-4 flex gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setIsCreateModalOpen(false)}
+                      className="flex-1 px-4 py-2.5 rounded-xl border border-white/10 text-zinc-300 hover:bg-white/5 transition-colors font-medium"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="flex-1 px-4 py-2.5 rounded-xl bg-green-500 hover:bg-green-400 text-black font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-green-900/20"
+                    >
+                      {loading ? 'Creating...' : 'Create Listing'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {isEditModalOpen && (
+          <motion.div
+            initial="hidden" animate="visible" exit="hidden" variants={overlayVariants}
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+          >
+            <motion.div
+              variants={modalVariants}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-[#111] border border-white/10 rounded-2xl max-w-lg w-full shadow-2xl overflow-hidden"
+            >
+              <div className="flex justify-between items-center p-6 border-b border-white/10 bg-white/5">
+                <h2 className="text-xl font-bold text-white">Edit Listing</h2>
+                <button onClick={() => setIsEditModalOpen(false)} className="text-zinc-400 hover:text-white transition-colors">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="p-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
+                <form onSubmit={handleEditListing} className="space-y-5">
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-medium text-zinc-300">Title</label>
+                    <input
+                      type="text"
+                      value={editForm.title}
+                      onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+                      className="w-full px-4 py-2.5 bg-zinc-900/50 border border-white/10 rounded-xl focus:outline-none focus:ring-1 focus:ring-green-500/50 focus:border-green-500/50 text-white placeholder-zinc-600 transition-all"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-sm font-medium text-zinc-300">Price (₹)</label>
+                      <input
+                        type="number"
+                        value={editForm.price}
+                        onChange={(e) => setEditForm({ ...editForm, price: e.target.value })}
+                        className="w-full px-4 py-2.5 bg-zinc-900/50 border border-white/10 rounded-xl focus:outline-none focus:ring-1 focus:ring-green-500/50 focus:border-green-500/50 text-white placeholder-zinc-600 transition-all"
+                      />
                     </div>
-                  )}
+                    <div className="space-y-1.5">
+                      <label className="text-sm font-medium text-zinc-300">Category</label>
+                      <select
+                        value={editForm.category}
+                        onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
+                        className="w-full px-4 py-2.5 bg-zinc-900/50 border border-white/10 rounded-xl focus:outline-none focus:ring-1 focus:ring-green-500/50 focus:border-green-500/50 text-white transition-all appearance-none"
+                      >
+                        {categories.map((category) => (
+                          <option key={category} value={category} className='bg-zinc-900'>{category}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
 
-                </div>
-                <div className="flex justify-end space-x-3 p-4 border-t">
-                  <button
-                    onClick={() => setIsCreateModalOpen(false)}
-                    className="px-4 py-2 text-gray-600 hover:bg-gray-950 rounded-lg transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className={`px-4 py-2 rounded-lg transition-colors ${loading ? 'bg-gray-500' : 'bg-green-600 hover:bg-green-700 text-white'
-                      }`}
-                  >
-                    {loading ? 'Creating...' : 'Create'}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-medium text-zinc-300">Description</label>
+                    <textarea
+                      value={editForm.description}
+                      onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                      rows={4}
+                      className="w-full px-4 py-2.5 bg-zinc-900/50 border border-white/10 rounded-xl focus:outline-none focus:ring-1 focus:ring-green-500/50 focus:border-green-500/50 text-white placeholder-zinc-600 resize-none transition-all"
+                    />
+                  </div>
 
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-medium text-zinc-300">Images</label>
 
-      {/* Edit Modal */}
-      {isEditModalOpen && (
-        <div className="fixed inset-0 bg-zinc-900 bg-opacity-50 flex items-center justify-center p-4 z-20">
-          <div className="bg-zinc-900 rounded-lg max-w-md w-full">
-            <div className="flex justify-between items-center p-4 border-b">
-              <h2 className="text-lg font-semibold">Edit Listing</h2>
-              <button
-                onClick={() => setIsEditModalOpen(false)}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            {/* Make the content area scrollable with a max height */}
-            <div className="p-4 max-h-[70vh] overflow-y-auto">
-              <form onSubmit={handleEditListing} className="space-y-4">
-                {/* Title Field */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">Title</label>
-                  <input
-                    type="text"
-                    value={editForm.title}
-                    onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
-                    className="w-full px-3 py-2 bg-zinc-800 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  />
-                </div>
-                {/* Description Field */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">Description</label>
-                  <textarea
-                    value={editForm.description}
-                    onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
-                    rows={3}
-                    className="resize-none w-full px-3 py-2 bg-zinc-800 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  />
-                </div>
-                {/* Price Field */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">Price (Rupees)</label>
-                  <input
-                    type="number"
-                    value={editForm.price}
-                    onChange={(e) => setEditForm({ ...editForm, price: e.target.value })}
-                    className="w-full px-3 py-2 bg-zinc-800 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  />
-                </div>
-                {/* Category Field */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">Category</label>
-                  <select
-                    value={editForm.category}
-                    onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
-                    className="w-full px-3 py-2 bg-zinc-800 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  >
-                    {categories.map((category) => (
-                      <option key={category} value={category}>{category}</option>
-                    ))}
-                  </select>
-                </div>
-                {/* Images Section */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">Images</label>
-                  {/* Existing Images Preview Section */}
-                  {existingImages.length > 0 && (
-                    <div className="mt-4 overflow-x-auto">
-                      <div className="flex space-x-2">
+                    {/* Existing Images */}
+                    {existingImages.length > 0 && (
+                      <div className="mb-3 grid grid-cols-4 gap-2">
                         {existingImages.map((url, index) => (
-                          <div key={index} className="relative w-24 h-24 border rounded overflow-hidden flex-shrink-0">
-                            <img src={url} alt={`Existing Image ${index + 1}`} className="w-full h-full object-cover" />
+                          <div key={`exist-${index}`} className="relative aspect-square border border-white/10 rounded-lg overflow-hidden group">
+                            <img src={url} alt={`Existing ${index + 1}`} className="w-full h-full object-cover" />
                             <button
                               type="button"
-                              className="absolute top-1 right-1 bg-red-600 p-1 text-white rounded-lg"
+                              className="absolute top-1 right-1 bg-black/60 hover:bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-all backdrop-blur-md"
                               onClick={() => {
                                 const updatedImages = existingImages.filter((_, i) => i !== index);
                                 setExistingImages(updatedImages);
                               }}
                             >
-                              &times;
+                              <X className="w-3 h-3" />
                             </button>
                           </div>
                         ))}
                       </div>
+                    )}
+
+                    <div className="border-2 border-dashed border-white/10 rounded-xl p-4 text-center hover:border-green-500/30 transition-colors bg-white/[0.02] flex flex-col items-center justify-center">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        onChange={(e) => {
+                          const files = Array.from(e.target.files);
+                          setEditForm({
+                            ...editForm,
+                            newImages: [...editForm.newImages, ...files],
+                          });
+                        }}
+                        className="hidden"
+                        id="editImages"
+                      />
+                      <label htmlFor="editImages" className="cursor-pointer flex items-center gap-2 text-zinc-400 hover:text-green-500 transition-colors">
+                        <Plus className="w-5 h-5" />
+                        <span className="text-sm font-medium">Add more images</span>
+                      </label>
                     </div>
-                  )}
-                  {/* New Images Upload Section */}
-                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center mt-4">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      multiple
-                      onChange={(e) => {
-                        const files = Array.from(e.target.files);
-                        setEditForm({
-                          ...editForm,
-                          newImages: [...editForm.newImages, ...files],
-                        });
-                      }}
-                      className="hidden"
-                      id="newImages"
-                    />
-                    <label htmlFor="newImages" className="cursor-pointer">
-                      <Upload className="w-6 h-6 text-gray-400 mx-auto mb-2" />
-                      <p className="text-sm text-gray-500">Click to upload or drag and drop</p>
-                    </label>
-                  </div>
-                  {/* New Images Preview Section */}
-                  {editForm.newImages.length > 0 && (
-                    <div className="mt-4 overflow-x-auto">
-                      <div className="flex space-x-2">
+
+                    {/* New Images Preview */}
+                    {editForm.newImages.length > 0 && (
+                      <div className="mt-3 grid grid-cols-4 gap-2">
                         {editForm.newImages.map((file, index) => (
-                          <div key={index} className="relative w-24 h-24 border rounded overflow-hidden flex-shrink-0">
+                          <div key={`new-${index}`} className="relative aspect-square border border-white/10 rounded-lg overflow-hidden group">
                             <img src={URL.createObjectURL(file)} alt={`New Preview ${index + 1}`} className="w-full h-full object-cover" />
                             <button
                               type="button"
-                              className="absolute top-1 right-1 bg-red-600 p-1 text-white rounded-lg"
+                              className="absolute top-1 right-1 bg-black/60 hover:bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-all backdrop-blur-md"
                               onClick={() => {
                                 const updatedNewImages = editForm.newImages.filter((_, i) => i !== index);
                                 setEditForm({ ...editForm, newImages: updatedNewImages });
                               }}
                             >
-                              &times;
+                              <X className="w-3 h-3" />
                             </button>
                           </div>
                         ))}
                       </div>
-                    </div>
-                  )}
-                </div>
-                {/* Action Buttons */}
-                <div className="flex justify-end space-x-3 p-4 border-t">
-                  <button
-                    onClick={() => setIsEditModalOpen(false)}
-                    className="px-4 py-2 text-gray-600 hover:bg-gray-950 rounded-lg transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className={`px-4 py-2 rounded-lg transition-colors ${loading ? 'bg-gray-500' : 'bg-green-600 hover:bg-green-700 text-white'
-                      }`}
-                  >
-                    {loading ? 'Saving...' : 'Save'}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
+                    )}
+                  </div>
 
-      {/* Delete Modal */}
-      {isDeleteModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-          <div className="bg-zinc-900 rounded-lg max-w-sm w-full p-4">
-            <h2 className="text-lg font-semibold mb-2">Delete Listing</h2>
-            <p className="text-gray-300 mb-4">
-              Are you sure you want to delete "{selectedListing?.title}"? This action cannot be undone.
-            </p>
-            <div className="flex justify-end space-x-3">
-              <button
-                onClick={() => setIsDeleteModalOpen(false)}
-                className="px-4 py-2 text-gray-600 hover:bg-gray-950 rounded-lg transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                disabled={loading}
-                onClick={handleDeleteListing}
-                className={`px-4 py-2 rounded-lg transition-colors ${loading ? 'bg-red-800' : "bg-red-600 text-white  hover:bg-red-700"}`}
-              >
-                {loading ? 'Deleting...' : 'Delete'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+                  <div className="pt-4 flex gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setIsEditModalOpen(false)}
+                      className="flex-1 px-4 py-2.5 rounded-xl border border-white/10 text-zinc-300 hover:bg-white/5 transition-colors font-medium"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="flex-1 px-4 py-2.5 rounded-xl bg-green-500 hover:bg-green-400 text-black font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-green-900/20"
+                    >
+                      {loading ? 'Saving...' : 'Save Changes'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {isDeleteModalOpen && (
+          <motion.div
+            initial="hidden" animate="visible" exit="hidden" variants={overlayVariants}
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+          >
+            <motion.div
+              variants={modalVariants}
+              className="bg-[#111] border border-white/10 rounded-2xl max-w-sm w-full p-6 shadow-2xl"
+            >
+              <div className="flex flex-col items-center text-center mb-6">
+                <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mb-4 text-red-500">
+                  <Trash2 className="w-8 h-8" />
+                </div>
+                <h2 className="text-xl font-bold text-white mb-2">Delete Listing</h2>
+                <p className="text-zinc-400 text-sm">
+                  Are you sure you want to delete <span className="text-white font-medium">"{selectedListing?.title}"</span>? This action cannot be undone.
+                </p>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setIsDeleteModalOpen(false)}
+                  className="flex-1 px-4 py-2.5 rounded-xl border border-white/10 text-zinc-300 hover:bg-white/5 transition-colors font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  disabled={loading}
+                  onClick={handleDeleteListing}
+                  className="flex-1 px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-medium transition-colors shadow-lg shadow-red-900/20"
+                >
+                  {loading ? 'Deleting...' : 'Delete'}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
@@ -693,50 +724,65 @@ const UserListingsPage = () => {
 const ImageSlider = ({ images }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  const handlePrev = () => {
+  const handlePrev = (e) => {
+    e.stopPropagation();
     setCurrentIndex((prevIndex) =>
       prevIndex === 0 ? images.length - 1 : prevIndex - 1
     );
   };
 
-  const handleNext = () => {
+  const handleNext = (e) => {
+    e.stopPropagation();
     setCurrentIndex((prevIndex) =>
       prevIndex === images.length - 1 ? 0 : prevIndex + 1
     );
   };
 
-  return (
-  <div className="relative">
-    {images.length > 0 ? (
-      <>
-        <img
-          src={images[currentIndex]}
-          alt={`Slide ${currentIndex + 1}`}
-          className="w-full h-60 xl:h-80 object-cover rounded-t-lg"
-        />
-        {images.length > 1 && (
-          <>
-            <button
-              className="absolute top-1/2 left-4 transform -translate-y-1/2 bg-black bg-opacity-50 text-white rounded-full p-2"
-              onClick={handlePrev}
-            >
-              &#8249;
-            </button>
-            <button
-              className="absolute top-1/2 right-4 transform -translate-y-1/2 bg-black bg-opacity-50 text-white rounded-full p-2"
-              onClick={handleNext}
-            >
-              &#8250;
-            </button>
-          </>
-        )}
-      </>
-    ) : (
-      <div className="w-full h-60 xl:h-80 bg-zinc-800 rounded-t-lg flex items-center justify-center">
-        <Package className="w-10 h-10 text-zinc-600" />
+  if (!images || images.length === 0) {
+    return (
+      <div className="w-full h-full bg-zinc-900 flex items-center justify-center">
+        <Package className="w-10 h-10 text-zinc-700" />
       </div>
-    )}
-  </div>
+    );
+  }
+
+  return (
+    <div className="relative w-full h-full group">
+      <img
+        src={images[currentIndex]}
+        alt={`Slide ${currentIndex + 1}`}
+        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+      />
+
+      {images.length > 1 && (
+        <>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+
+          <button
+            className="absolute top-1/2 left-2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-all"
+            onClick={handlePrev}
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+          <button
+            className="absolute top-1/2 right-2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-all"
+            onClick={handleNext}
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+
+          <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex gap-1 opacity-100 mix-blend-difference">
+            {images.map((_, idx) => (
+              <div
+                key={idx}
+                className={`w-1.5 h-1.5 rounded-full transition-all ${idx === currentIndex ? 'bg-white scale-125' : 'bg-white/50'}`}
+              />
+            ))}
+          </div>
+        </>
+      )}
+    </div>
   );
 };
+
 export default UserListingsPage;

@@ -1,24 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, Check, Trash2, Mail, Heart, UserPlus, MessageSquare, Package } from 'lucide-react';
-import { Button } from "../../components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "../../components/ui/card";
-import { Badge } from "../../components/ui/badge";
+import { Bell, Check, Trash2, CheckCircle2, X } from 'lucide-react';
 import axios from 'axios';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const NotificationsPage = () => {
-  const [isSidebarOpen, setSidebarOpen] = useState(false);
-  const [selectedButton, setSelectedButton] = useState("Notifications");
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  const toggleSidebar = () => {
-    setSidebarOpen(!isSidebarOpen);
-  };
 
   useEffect(() => {
     fetchNotifications();
@@ -73,7 +60,6 @@ const NotificationsPage = () => {
   const fetchNotifications = async () => {
     try {
       const response = await axios.get('/api/notifications');
-      console.log('Notifications:', response.data);
       setNotifications(response.data);
       setLoading(false);
     } catch (error) {
@@ -82,13 +68,10 @@ const NotificationsPage = () => {
     }
   };
 
-  const getUnreadCount = () => notifications.filter(n => !n.isRead).length;
-
   const handleMarkAsRead = async (id) => {
     try {
       await axios.patch(`/api/notifications/${id}/read`);
-      // Update local state
-      setNotifications(notifications.map(notification => 
+      setNotifications(notifications.map(notification =>
         notification._id === id ? { ...notification, isRead: true } : notification
       ));
     } catch (error) {
@@ -99,7 +82,6 @@ const NotificationsPage = () => {
   const handleDelete = async (id) => {
     try {
       await axios.delete(`/api/notifications/${id}`);
-      // Update local state
       setNotifications(notifications.filter(notification => notification._id !== id));
     } catch (error) {
       console.error('Error deleting notification:', error);
@@ -108,17 +90,15 @@ const NotificationsPage = () => {
 
   const handleMarkAllAsRead = async () => {
     try {
-      // Mark all as read in the backend
       const promises = notifications
         .filter(n => !n.isRead)
         .map(n => axios.patch(`/api/notifications/${n._id}/read`));
-      
+
       await Promise.all(promises);
-      
-      // Update local state
-      setNotifications(notifications.map(notification => ({ 
-        ...notification, 
-        isRead: true 
+
+      setNotifications(notifications.map(notification => ({
+        ...notification,
+        isRead: true
       })));
     } catch (error) {
       console.error('Error marking all notifications as read:', error);
@@ -128,7 +108,6 @@ const NotificationsPage = () => {
   const handleDeleteAll = async () => {
     try {
       await axios.delete('/api/notifications');
-      // Clear local state
       setNotifications([]);
     } catch (error) {
       console.error('Error deleting all notifications:', error);
@@ -136,71 +115,111 @@ const NotificationsPage = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-zinc-900 lg:pl-64 pt-16">
-      <div className="flex-1 bg-zinc-900 p-8">
-        <div className="max-w-4xl mx-auto space-y-6">
-          <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-semibold text-white">Notifications</h1>
-            <div className="flex space-x-2">
-              <Button onClick={handleMarkAllAsRead} className="mr-2 hover:bg-zinc-700">
-                Mark all as read
-              </Button>
-              <Button onClick={handleDeleteAll} className="hover:bg-red-700">
-                Delete all
-              </Button>
-            </div>
+    <div className="flex min-h-screen bg-[#0a0a0a] lg:pl-64 pt-20">
+      <div className="flex-1 p-6 md:p-8 max-w-4xl mx-auto w-full">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-white mb-2">Notifications</h1>
+            <p className="text-zinc-400">Manage your alerts and updates.</p>
           </div>
 
-          {notifications.length === 0 ? (
-            <Card>
-              <CardContent className="text-center py-8">
-                <Bell className="w-12 h-12 mx-auto text-gray-400 mb-4" />
-                <p className="text-gray-400">No notifications yet</p>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="space-y-4">
-              {notifications.map((notification) => (
-                <Card 
-                  key={notification._id}
-                  className={`transition-colors top-2 ${notification.isRead ? 'opacity-60' : ''}`}
-                >
-                  <CardContent className="flex items-start justify-between">
-                    <div className="flex items-end space-x-4 space-y-2">
-                      <div className="p-2 bg-zinc-800 rounded-lg">
-                        <Bell className="w-5 h-5 text-gray-400" />
-                      </div>
-                      <div>
-                        <p className="text-gray-200">{notification.content}</p>
-                        <p className="text-sm text-gray-400">
-                          {new Date(notification.createdAt).toLocaleDateString()}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex gap-2 items-end space-y-4">
-                      {!notification.isRead && (
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => handleMarkAsRead(notification._id)}
-                        >
-                          <Check className="w-4 h-4 text-white" />
-                        </Button>
-                      )}
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => handleDelete(notification._id)}
-                      >
-                        <Trash2 className="w-4 h-4 text-white" />
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+          {notifications.length > 0 && (
+            <div className="flex gap-3">
+              <button
+                onClick={handleMarkAllAsRead}
+                className="px-4 py-2 text-sm bg-zinc-900 border border-white/10 text-zinc-300 hover:text-white hover:border-white/20 rounded-xl transition-all flex items-center gap-2"
+              >
+                <CheckCircle2 className="w-4 h-4" />
+                <span className="hidden sm:inline">Mark all read</span>
+              </button>
+              <button
+                onClick={handleDeleteAll}
+                className="px-4 py-2 text-sm bg-red-500/10 border border-red-500/20 text-red-500 hover:bg-red-500/20 rounded-xl transition-all flex items-center gap-2"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span className="hidden sm:inline">Clear all</span>
+              </button>
             </div>
           )}
         </div>
+
+        {loading ? (
+          <div className="space-y-4">
+            {[1, 2, 3].map(n => (
+              <div key={n} className="h-24 bg-[#111] rounded-2xl animate-pulse" />
+            ))}
+          </div>
+        ) : notifications.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 text-zinc-500 bg-[#111] rounded-3xl border border-white/5">
+            <div className="w-20 h-20 bg-zinc-900 rounded-full flex items-center justify-center mb-6 ring-1 ring-white/5">
+              <Bell className="w-10 h-10 opacity-50" />
+            </div>
+            <h3 className="text-xl font-semibold text-white mb-2">No notifications</h3>
+            <p>You're all caught up! Check back later.</p>
+          </div>
+        ) : (
+          <motion.div layout className="space-y-3">
+            <AnimatePresence mode='popLayout'>
+              {notifications.map((notification) => (
+                <motion.div
+                  key={notification._id}
+                  layout
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  className={`group relative p-5 rounded-2xl border transition-all duration-300 ${notification.isRead
+                      ? 'bg-[#0a0a0a] border-white/5 hover:border-white/10'
+                      : 'bg-[#111] border-green-500/20 shadow-lg shadow-green-900/5'
+                    }`}
+                >
+                  <div className="flex gap-4">
+                    <div className={`mt-1 p-2 rounded-full flex-shrink-0 ${notification.isRead ? 'bg-zinc-900 text-zinc-500' : 'bg-green-500/10 text-green-500'
+                      }`}>
+                      <Bell className="w-5 h-5" />
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-start gap-4">
+                        <p className={`text-sm md:text-base leading-relaxed ${notification.isRead ? 'text-zinc-400' : 'text-gray-100 font-medium'
+                          }`}>
+                          {notification.content}
+                        </p>
+                        <span className="text-xs text-zinc-500 whitespace-nowrap mt-1">
+                          {new Date(notification.createdAt).toLocaleDateString(undefined, {
+                            month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                          })}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    {!notification.isRead && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleMarkAsRead(notification._id); }}
+                        className="p-1.5 bg-zinc-800 text-green-500 hover:bg-green-500 hover:text-white rounded-lg transition-colors border border-white/5"
+                        title="Mark as read"
+                      >
+                        <Check className="w-4 h-4" />
+                      </button>
+                    )}
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleDelete(notification._id); }}
+                      className="p-1.5 bg-zinc-800 text-zinc-400 hover:bg-red-500 hover:text-white rounded-lg transition-colors border border-white/5"
+                      title="Delete"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  {!notification.isRead && (
+                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-12 bg-green-500 rounded-r-full" />
+                  )}
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </motion.div>
+        )}
       </div>
     </div>
   );
