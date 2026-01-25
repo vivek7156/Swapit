@@ -2,6 +2,8 @@ import Message from "../models/message.model.js";
 import Conversation from "../models/conversation.model.js";
 import { getReceiverSocketId, io } from "../socketio/socket.js";
 import mongoose from 'mongoose';
+import User from '../models/user.model.js';
+import Item from '../models/item.model.js';
 
 export const sendMessage = async (req, res) => {
   try {
@@ -57,8 +59,8 @@ export const getMessages = async (req, res) => {
       path: 'messages',
       model: 'Message',
       populate: { path: 'senderId receiverId', model: 'User' }
-  });
-  console.log(conversation);
+    });
+    console.log(conversation);
 
     if (!conversation) return res.status(200).json({ success: true, messages: [] });
 
@@ -80,9 +82,9 @@ export const requestChat = async (req, res) => {
     });
 
     if (existingConversation) {
-      return res.status(409).json({ 
+      return res.status(409).json({
         message: 'Conversation already exists',
-        conversationId: existingConversation._id 
+        conversationId: existingConversation._id
       });
     }
 
@@ -111,16 +113,16 @@ export const getReceivedMessages = async (req, res) => {
         }
       }
     })
-    .populate('participants._id', 'username profileImage')
-    .populate({
-      path: 'messages',
-      populate: {
-        path: 'senderId',
-        select: 'username profileImage'
-      }
-    })
-    .populate('itemId', 'title images')
-    .sort({ updatedAt: -1 });
+      .populate('participants._id', 'username profileImage')
+      .populate({
+        path: 'messages',
+        populate: {
+          path: 'senderId',
+          select: 'username profileImage'
+        }
+      })
+      .populate('itemId', 'title images')
+      .sort({ updatedAt: -1 });
 
     const receivedMessages = conversations.map(conv => {
       const buyer = conv.participants.find(
@@ -157,16 +159,16 @@ export const getSentMessages = async (req, res) => {
         }
       }
     })
-    .populate('participants._id', 'username profileImage')
-    .populate({
-      path: 'messages',
-      populate: {
-        path: 'senderId',
-        select: 'username profileImage'
-      }
-    })
-    .populate('itemId', 'title images')
-    .sort({ updatedAt: -1 });
+      .populate('participants._id', 'username profileImage')
+      .populate({
+        path: 'messages',
+        populate: {
+          path: 'senderId',
+          select: 'username profileImage'
+        }
+      })
+      .populate('itemId', 'title images')
+      .sort({ updatedAt: -1 });
 
     const sentMessages = conversations.map(conv => {
       const seller = conv.participants.find(
@@ -214,7 +216,7 @@ export const getConversation = async (req, res) => {
 export const updateConversationStatus = async (req, res) => {
   try {
     const { conversationId, status } = req.body;
-    
+
     const conversation = await Conversation.findByIdAndUpdate(
       conversationId,
       { status },
@@ -248,18 +250,62 @@ export const rateSeller = async (req, res) => {
     if (!seller) {
       return res.status(404).json({ message: 'Seller not found' });
     }
+
+    // Check if buyer has already rated this seller for this item
+    const existingRating = seller.sellerRatings.find(
+      r => r.fromUser.toString() === buyerId.toString() && r.itemId.toString() === itemId.toString()
+    );
+
+    if (existingRating) {
+      return res.status(400).json({
+        message: 'You have already rated this seller for this item',
+        alreadyRated: true
+      });
+    }
+
+    // Add new rating
     seller.sellerRatings.push({ fromUser: buyerId, rating, itemId });
 
 
     // Calculate new average rating
-    const avg = seller.sellerRatings.reduce((acc, curr) => acc + curr.rating, 0) / 
-               seller.sellerRatings.length;
-    
+    const avg = seller.sellerRatings.reduce((acc, curr) => acc + curr.rating, 0) /
+      seller.sellerRatings.length;
+
     seller.ratings = Math.round(avg * 10) / 10;
     await seller.save();
 
     res.status(200).json({ success: true, seller });
   } catch (error) {
+    console.error('Error rating seller:', error);
     res.status(500).json({ message: 'Error rating seller' });
+  }
+};
+
+export const checkRating = async (req, res) => {
+  try {
+    const { sellerId, itemId } = req.query;
+    const buyerId = req.id;
+
+    const seller = await User.findById(sellerId);
+    if (!seller) {
+      return res.status(404).json({ message: 'Seller not found' });
+    }
+
+    // Find existing rating
+    const existingRating = seller.sellerRatings.find(
+      r => r.fromUser.toString() === buyerId.toString() && r.itemId.toString() === itemId.toString()
+    );
+
+    if (existingRating) {
+      return res.status(200).json({
+        hasRated: true,
+        rating: existingRating.rating
+      });
+    }
+
+    res.status(200).json({ hasRated: false });
+  } catch (error) {
+    console.error('Error checking rating:', error);
+    res.status(500).json({ message: 'Error checking rating' });
   }
 };

@@ -71,9 +71,34 @@ const MessagingPage = () => {
         setParticipants(response.data.conversation.participants || []);
         socket.emit('joinChat', { conversationId: response.data.conversation._id });
 
-        // Reset rating state for new chat
-        setRating(0); // You might want to fetch actual rating if it exists
-        setHasRated(false); // Same here
+        // Check if user has already rated this seller for this item
+        const seller = response.data.conversation.participants.find(p => p.role === "seller");
+        if (seller && response.data.conversation.itemId) {
+          try {
+            const { data } = await axios.get('/api/chat/check-rating', {
+              params: {
+                sellerId: seller._id._id,
+                itemId: response.data.conversation.itemId._id
+              }
+            });
+
+            if (data.hasRated) {
+              setHasRated(true);
+              setRating(data.rating);
+            } else {
+              setHasRated(false);
+              setRating(0);
+            }
+          } catch (error) {
+            console.error('Error checking rating:', error);
+            // Default to not rated if check fails
+            setHasRated(false);
+            setRating(0);
+          }
+        } else {
+          setRating(0);
+          setHasRated(false);
+        }
       }
     } catch (error) {
       console.error('Error fetching conversation:', error);
@@ -179,6 +204,13 @@ const MessagingPage = () => {
       }
     } catch (error) {
       console.error('Error rating user:', error);
+      if (error.response?.data?.alreadyRated) {
+        // User has already rated, update the UI to reflect this
+        setHasRated(true);
+        alert('You have already rated this seller for this item.');
+      } else if (error.response?.data?.message) {
+        alert(error.response.data.message);
+      }
     }
   };
 
