@@ -14,17 +14,12 @@ import { v2 as cloudinary } from 'cloudinary';
 import cors from 'cors';
 import http from 'http';
 import path from 'path';
-import { fileURLToPath } from 'url';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-dotenv.config({ path: path.join(__dirname, '.env') });
-
+dotenv.config();
 const app = express();
 const server = http.createServer(app);
 const PORT = process.env.PORT || 5000;
-// const __dirname = path.resolve(); // Removed re-declaration
+const __dirname = path.resolve();
 
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -60,6 +55,6 @@ initializeSocket(server);
 
 server.listen(PORT, () => {
     console.log(`Server is running on ${PORT}`);
-
+    
 });
 export { app, server };
