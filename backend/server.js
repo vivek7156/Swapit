@@ -13,12 +13,18 @@ import cookieParser from 'cookie-parser';
 import { v2 as cloudinary } from 'cloudinary';
 import cors from 'cors';
 import http from 'http';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-dotenv.config();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+dotenv.config({ path: path.join(__dirname, '.env') });
+
 const app = express();
 const server = http.createServer(app);
 const PORT = process.env.PORT || 5000;
-const __dirname = path.resolve();
+// const __dirname = path.resolve(); // Removed re-declaration
 
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -50,11 +56,10 @@ if(process.env.NODE_ENV === "production"){
 }
 
 import { initializeSocket } from './socketio/socket.js';
-import path from 'path';
 initializeSocket(server);
 
 server.listen(PORT, () => {
     console.log(`Server is running on ${PORT}`);
-    
+
 });
 export { app, server };
