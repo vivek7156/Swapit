@@ -270,7 +270,7 @@ const MessagingPage = ({ }) => {
   };
 
   return (
-    <div className="flex h-screen lg:pl-64 pt-16">
+    <div className="min-h-screen bg-zinc-900 lg:pl-64 pt-16">
       {/* Left Panel */}
       <div className={`w-full md:w-80 bg-zinc-900 border-r border-gray-800 ${activeChat ? 'hidden md:block' : 'block'
         }`}>

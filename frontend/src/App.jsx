@@ -71,8 +71,8 @@ function App() {
   }
   return (
     <div className="">
-      {authUser && <Navbar toggleSidebar={toggleSidebar} />}
-            
+      {authUser && location.pathname !== '/' && <Navbar toggleSidebar={toggleSidebar} />}
+
       {/* Sidebar Component */}
       {authUser && location.pathname !== '/' && (
         <Sidebar

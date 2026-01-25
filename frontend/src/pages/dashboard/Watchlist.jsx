@@ -122,7 +122,7 @@ const WatchlistPage = () => {
   };
 
   return (
-    <div className="flex h-screen lg:pl-64 pt-16">
+    <div className="flex min-h-screen bg-zinc-900 lg:pl-64 pt-16">
       <div className="flex-1 bg-zinc-900 p-8">
         <div className="max-w-7xl mx-auto">
           <h1 className="text-2xl font-semibold text-white mb-6">Your Watchlist</h1>

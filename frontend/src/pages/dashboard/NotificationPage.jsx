@@ -136,7 +136,7 @@ const NotificationsPage = () => {
   };
 
   return (
-    <div className="flex h-screen lg:pl-64 pt-16">
+    <div className="flex min-h-screen bg-zinc-900 lg:pl-64 pt-16">
       <div className="flex-1 bg-zinc-900 p-8">
         <div className="max-w-4xl mx-auto space-y-6">
           <div className="flex justify-between items-center">

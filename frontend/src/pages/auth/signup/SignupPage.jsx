@@ -1,13 +1,16 @@
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { MdOutlineMail, MdPassword, MdDriveFileRenameOutline } from "react-icons/md";
+import { MdOutlineMail, MdPassword } from "react-icons/md";
 import { FaUser } from "react-icons/fa";
 import { useMutation } from "@tanstack/react-query";
 import toast from "react-hot-toast";
+import SearchableDropdown from "../../../components/SearchableDropdown";
+import logo from "../../../assets/logo.png";
+import { motion } from "framer-motion";
 
 function SignUpPage() {
   const [colleges, setColleges] = useState([]);
-  const [selectedCollege, setSelectedCollege] = useState("");
+  const [selectedCollege, setSelectedCollege] = useState(null);
   const [formData, setFormData] = useState({
     email: "",
     username: "",
@@ -28,7 +31,7 @@ function SignUpPage() {
     fetchColleges();
   }, []);
 
-  const { mutate, isError, error } = useMutation({
+  const { mutate, isPending, isError, error } = useMutation({
     mutationFn: async ({ email, username, password, collegeId }) => {
       try {
         const res = await fetch("/api/auth/signup", {
@@ -48,15 +51,15 @@ function SignUpPage() {
       }
     },
     onSuccess: () => {
-      toast.success("User signed up successfully");
+      toast.success("Account created successfully!");
     },
   });
 
   const handleCollegeSelect = (college) => {
-    setSelectedCollege(college.name);
-    setFormData((prevFormData) => ({
-      ...prevFormData,
-      collegeId: college._id,
+    setSelectedCollege(college);
+    setFormData((prev) => ({
+      ...prev,
+      collegeId: college ? college._id : "",
     }));
   };
 
@@ -70,68 +73,105 @@ function SignUpPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-zinc-950">
-      <div className="flex-1 flex flex-col justify-center items-center">
-        <form className="sm:w-[25rem] w-[17rem] mx-auto flex gap-4 flex-col" onSubmit={handleSubmit}>
-          <h1 className="text-4xl font-extrabold text-white">Join today.</h1>
-          <label className="input input-bordered rounded flex items-center gap-2 bg-zinc-800 text-white px-2">
-            <FaUser />
-            <input
-              type="text"
-              className="grow bg-transparent border-none focus:ring-0 h-10"
-              placeholder="Username"
-              name="username"
-              onChange={handleInputChange}
-              value={formData.username}
-            />
-          </label>
-          <label className="input input-bordered rounded flex items-center gap-2 bg-zinc-800 text-white px-2">
-            <MdOutlineMail />
-            <input
-              type="email"
-              className="grow bg-transparent border-none focus:ring-0 h-10"
-              placeholder="Email"
-              name="email"
-              onChange={handleInputChange}
-              value={formData.email}
-            />
-          </label>
-          <label className="input input-bordered rounded flex items-center gap-2 bg-zinc-800 text-white px-2">
-            <MdPassword />
-            <input
-              type="password"
-              className="grow bg-transparent border-none focus:ring-0 h-10"
-              placeholder="Password"
-              name="password"
-              onChange={handleInputChange}
-              value={formData.password}
-            />
-          </label>
-          <label htmlFor="college" className="w-full font-medium text-lg text-white">Select Your College</label>
-          <details className="dropdown w-full dropdown-top">
-            <summary className="btn m-1 w-full bg-zinc-800 rounded-xl text-white h-10">
-              {selectedCollege || "Select College"}
-            </summary>
-            <ul className="dropdown-content menu bg-base-100 rounded-box z-[1] w-full p-2 shadow text-lg">
-              {colleges.map((college) => (
-                <li key={college._id}>
-                  <a onClick={() => handleCollegeSelect(college)} role="button" className="text-white">
-                    {college.name}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </details>
-          <button type="submit" className="btn rounded-xl btn-primary text-white bg-green-500 hover:bg-green-600 h-10">Sign up</button>
-          {isError && <p className="text-red-500">{error.message}</p>}
-        </form>
-        <div className="flex flex-col sm:w-[25rem] w-[17rem] gap-2 mt-4">
-          <p className="text-white text-lg">Already have an account?</p>
-          <Link to="/login">
-            <button className="btn rounded-xl btn-primary text-white btn-outline w-full hover:bg-green-600 hover:text-black h-10 border border-1 border-white">Sign in</button>
+    <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a] relative overflow-hidden px-4 py-10">
+      {/* Background Ambience */}
+      <div className="absolute top-0 right-1/4 w-[500px] h-[500px] bg-green-500/10 rounded-full blur-[120px] -z-10" />
+      <div className="absolute bottom-0 left-1/4 w-[500px] h-[500px] bg-purple-500/5 rounded-full blur-[120px] -z-10" />
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="w-full max-w-md bg-[#111] border border-white/10 rounded-2xl shadow-xl overflow-hidden p-8"
+      >
+        <div className="flex flex-col items-center mb-8">
+          <Link to="/" className="mb-6 group">
+            <img src={logo} alt="SwapIt" className="size-12 group-hover:scale-110 transition-transform duration-300" />
           </Link>
+          <h1 className="text-3xl font-bold text-white mb-2">Join SwapIt</h1>
+          <p className="text-zinc-400 text-center">
+            Create an account to start buying and selling.
+          </p>
         </div>
-      </div>
+
+        <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
+          <div className="space-y-4">
+
+            {/* Username */}
+            <div className="relative group">
+              <FaUser className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-green-500 transition-colors" size={16} />
+              <input
+                type="text"
+                placeholder="Username"
+                className="w-full bg-zinc-900 border border-white/5 rounded-lg py-3 pl-10 pr-4 text-white focus:outline-none focus:ring-1 focus:ring-green-500 focus:border-green-500/50 transition-all placeholder-zinc-500"
+                name="username"
+                onChange={handleInputChange}
+                value={formData.username}
+                required
+              />
+            </div>
+
+            {/* Email */}
+            <div className="relative group">
+              <MdOutlineMail className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-green-500 transition-colors" size={20} />
+              <input
+                type="email"
+                placeholder="Email Address"
+                className="w-full bg-zinc-900 border border-white/5 rounded-lg py-3 pl-10 pr-4 text-white focus:outline-none focus:ring-1 focus:ring-green-500 focus:border-green-500/50 transition-all placeholder-zinc-500"
+                name="email"
+                onChange={handleInputChange}
+                value={formData.email}
+                required
+              />
+            </div>
+
+            {/* Password */}
+            <div className="relative group">
+              <MdPassword className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-green-500 transition-colors" size={20} />
+              <input
+                type="password"
+                placeholder="Password"
+                className="w-full bg-zinc-900 border border-white/5 rounded-lg py-3 pl-10 pr-4 text-white focus:outline-none focus:ring-1 focus:ring-green-500 focus:border-green-500/50 transition-all placeholder-zinc-500"
+                name="password"
+                onChange={handleInputChange}
+                value={formData.password}
+                required
+              />
+            </div>
+
+            {/* College Selection */}
+            <div>
+              <label className="block text-zinc-400 text-sm font-medium mb-2 pl-1">Select Your College</label>
+              <SearchableDropdown
+                colleges={colleges}
+                value={selectedCollege}
+                onChange={handleCollegeSelect}
+                placeholder="Search for your college..."
+              />
+            </div>
+
+          </div>
+
+          <button
+            type="submit"
+            disabled={isPending}
+            className="w-full bg-green-500 hover:bg-green-600 text-black font-bold py-3.5 rounded-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed mt-2"
+          >
+            {isPending ? "Creating Account..." : "Create Account"}
+          </button>
+
+          {isError && <p className="text-red-400 text-sm text-center">{error.message}</p>}
+        </form>
+
+        <div className="mt-8 pt-6 border-t border-white/5 text-center">
+          <p className="text-zinc-400 text-sm">
+            Already have an account?{" "}
+            <Link to="/login" className="text-green-400 hover:text-green-300 font-medium hover:underline transition-colors">
+              Sign in
+            </Link>
+          </p>
+        </div>
+      </motion.div>
     </div>
   );
 }

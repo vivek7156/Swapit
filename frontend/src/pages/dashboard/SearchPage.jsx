@@ -170,7 +170,7 @@ const SearchPage = () => {
 
   const categories = ["Books", "Electronics", "Furniture", "Appliances", "Clothing", "Sports"];
   return (
-    <div className="min-h-screen bg-zinc-900 ">
+    <div className="min-h-screen bg-zinc-900">
 
       <div className='pt-20 lg:pl-64'>
         {/* Search Header */}

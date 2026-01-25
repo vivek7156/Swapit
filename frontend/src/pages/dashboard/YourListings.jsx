@@ -13,8 +13,6 @@ import {
   Plus,
   Package
 } from 'lucide-react';
-import Navbar from '../../components/Navbar';
-import Sidebar from '../../components/Sidebar';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 
@@ -316,17 +314,6 @@ const UserListingsPage = () => {
 
   return (
     <div className="min-h-screen bg-zinc-900 flex">
-      {/* Sidebar */}
-      <Navbar toggleSidebar={toggleSidebar} />
-      {/* Sidebar Component */}
-      <Sidebar
-        isSidebarOpen={isSidebarOpen}
-        setSidebarOpen={setSidebarOpen}
-        selectedButton={selectedButton}
-        setSelectedButton={setSelectedButton}
-      />
-
-      {/* Main Content */}
       <div className="flex-1 overflow-auto lg:pl-64 mt-16">
         <div className="md:p-8 p-6">
           <div className="flex justify-between items-center mb-6">

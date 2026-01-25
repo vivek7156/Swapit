@@ -116,7 +116,7 @@ const DashboardPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-900 ml-[8.5px]">
+    <div className="min-h-screen bg-zinc-900">
 
       {/* Main Content */}
       <main className="lg:pl-64 pt-16">
